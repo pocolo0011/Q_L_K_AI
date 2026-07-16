@@ -1,0 +1,333 @@
+// ============================================================
+// KHO AI - Warehouse Management System
+// Database Schema - PostgreSQL + Prisma ORM
+// ============================================================
+// ============================================================
+// KHO AI - Warehouse Management System
+// Prisma Schema - PostgreSQL (Tối ưu cho quy mô lớn)
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+enum UserRole {
+  ADMIN
+  MANAGER
+  STAFF
+  STOREKEEPER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+  DISCONTINUED
+}
+
+enum BinStatus {
+  EMPTY
+  IN_USE
+  FULL
+  MAINTENANCE
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  DELIVERING
+  COMPLETED
+  CANCELLED
+  RETURNED
+}
+
+enum ReceiptType {
+  IMPORT
+  EXPORT
+  TRANSFER
+  CHECK
+}
+
+enum NotificationType {
+  INVENTORY
+  ORDER
+  EXPIRY
+  SYSTEM
+  IMPORT
+}
+
+// ============================================================
+// 1. USER
+// ============================================================
+model User {
+  id                  String      @id @default(cuid())
+  employeeCode        String      @unique
+  fullName            String
+  email               String      @unique
+  phone               String      @unique
+  password            String
+  role                UserRole    @default(STAFF)
+  status              UserStatus  @default(ACTIVE)
+  avatar              String?
+  address             String?
+  birthday            DateTime?
+  gender              String?
+  joinDate            DateTime    @default(now())
+
+  // Permissions
+  canImport           Boolean @default(false)
+  canExport           Boolean @default(false)
+  canManageInventory  Boolean @default(false)
+  canViewReports      Boolean @default(false)
+  canManageWarehouse  Boolean @default(false)
+  canManageEmployees  Boolean @default(false)
+  canManageSuppliers  Boolean @default(false)
+  canManageProducts   Boolean @default(false)
+
+  // Relations
+  createdReceipts     StockReceipt[] @relation("CreatedBy")
+  notifications       Notification[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+// ============================================================
+// 2. WAREHOUSE & BIN LOCATION
+// ============================================================
+model Warehouse {
+  id          String        @id @default(cuid())
+  code        String        @unique
+  name        String
+  address     String
+  capacity    Int           @default(0)
+  status      Boolean       @default(true)
+
+  binLocations BinLocation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("warehouses")
+}
+
+model BinLocation {
+  id          String     @id @default(cuid())
+  code        String     @unique // A-01-02
+  name        String
+  type        String     // ROW, SHELF, BIN
+  capacity    Int        @default(100)
+  status      BinStatus  @default(EMPTY)
+
+  warehouseId String
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+
+  parentId    String?
+  parent      BinLocation? @relation("BinTree", fields: [parentId], references: [id])
+  children    BinLocation[] @relation("BinTree")
+
+  inventories Inventory[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("bin_locations")
+}
+
+// ============================================================
+// 3. PRODUCT (Hỗ trợ Multi-language)
+// ============================================================
+model Product {
+  id            String        @id @default(cuid())
+  code          String        @unique
+  nameVi        String
+  nameEn        String?
+  category      String
+  unit          String        @default("Cái")
+  barcode       String?
+  costPrice     Float
+  sellingPrice  Float
+  minStock      Int           @default(10)
+  defaultExpiry Int?          // Số ngày hết hạn
+  lotTracking   Boolean       @default(false)
+  status        ProductStatus @default(ACTIVE)
+  image         String?
+  descriptionVi String?
+  descriptionEn String?
+
+  inventories   Inventory[]
+  orderItems    OrderItem[]
+  receiptDetails StockReceiptDetail[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("products")
+}
+
+// ============================================================
+// 4. INVENTORY
+// ============================================================
+model Inventory {
+  id             String   @id @default(cuid())
+  quantity       Int      @default(0)
+  availableStock Int      @default(0)
+  reservedStock  Int      @default(0)
+  expiryDate     DateTime?
+  lotNumber      String?
+
+  productId      String
+  product        Product      @relation(fields: [productId], references: [id])
+
+  binLocationId  String
+  binLocation    BinLocation  @relation(fields: [binLocationId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([productId, binLocationId, lotNumber])
+  @@map("inventories")
+}
+
+// ============================================================
+// 5. SUPPLIER
+// ============================================================
+model Supplier {
+  id            String  @id @default(cuid())
+  code          String  @unique
+  name          String
+  contactPerson String?
+  phone         String
+  email         String?
+  address       String?
+  note          String?
+  deliveryCount Int     @default(0)
+  totalValue    Float   @default(0)
+  status        Boolean @default(true)
+
+  stockReceipts StockReceipt[] @relation("SupplierReceipt")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("suppliers")
+}
+
+// ============================================================
+// 6. ORDER
+// ============================================================
+model Order {
+  id              String      @id @default(cuid())
+  orderCode       String      @unique
+  customerName    String
+  customerPhone   String
+  customerAddress String
+  totalAmount     Float       @default(0)
+  status          OrderStatus @default(PENDING)
+  warehouseId     String?
+  notes           String?
+
+  items           OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String @id @default(cuid())
+  quantity  Int
+  unitPrice Float
+
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@map("order_items")
+}
+
+// ============================================================
+// 7. STOCK RECEIPT (Nhập/Xuất/Kiểm kê)
+// ============================================================
+model StockReceipt {
+  id            String       @id @default(cuid())
+  receiptCode   String       @unique
+  type          ReceiptType
+  status        String       @default("DRAFT")
+  totalQuantity Int          @default(0)
+  totalAmount   Float        @default(0)
+  notes         String?
+  orderId       String?
+
+  supplierId    String?
+  supplier      Supplier?    @relation("SupplierReceipt", fields: [supplierId], references: [id])
+
+  createdById   String?
+  createdBy     User?        @relation("CreatedBy", fields: [createdById], references: [id])
+
+  details       StockReceiptDetail[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("stock_receipts")
+}
+
+model StockReceiptDetail {
+  id          String @id @default(cuid())
+  quantity    Int
+  unitPrice   Float
+  subtotal    Float
+  location    String?
+  lotNumber   String?
+  expiryDate  DateTime?
+
+  receiptId   String
+  receipt     StockReceipt @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+
+  productId   String
+  product     Product      @relation(fields: [productId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@map("stock_receipt_details")
+}
+
+// ============================================================
+// 8. NOTIFICATION
+// ============================================================
+model Notification {
+  id          String           @id @default(cuid())
+  type        NotificationType
+  title       String
+  content     String
+  isRead      Boolean          @default(false)
+  referenceId String?
+
+  userId      String?
+  user        User?            @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@map("notifications")
+}

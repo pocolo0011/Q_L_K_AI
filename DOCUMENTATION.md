@@ -3,63 +3,163 @@
 ## 📋 Mục Lục
 1. [Tổng Quan Hệ Thống](#tổng-quan-hệ-thống)
 2. [Cấu Trúc Ứng Dụng](#cấu-trúc-ứng-dụng)
-3. [Chi Tiết Từng Màn Hình](#chi-tiết-từng-màn-hình)
-4. [Phân Quyền Người Dùng](#phân-quyền-người-dùng)
-5. [Luồng Nghiệp Vụ Chính](#luồng-nghiệp-vụ-chính)
+3. [Cấu Trúc Layout Chung](#cấu-trúc-layout-chung)
+4. [Chi Tiết Từng Màn Hình](#chi-tiết-từng-màn-hình)
+5. [Phân Quyền Người Dùng](#phân-quyền-người-dùng)
+6. [Luồng Nghiệp Vụ Chính](#luồng-nghiệp-vụ-chính)
+7. [Design System](#design-system)
+8. [Cài Đặt & Chạy](#cài-đặt--chạy-ứng-dụng)
 
 ---
 
 ## 🎯 Tổng Quan Hệ Thống
 
-**KHO AI** là hệ thống quản lý kho hàng thông minh, tích hợp AI để tối ưu hóa hoạt động kinh doanh. Hệ thống cung cấp các tính năng:
+**KHO AI** là hệ thống quản lý kho hàng thông minh, tích hợp AI để tối ưu hóa hoạt động kinh doanh.
 
+**Tính năng chính:**
 - ✅ Quản lý sản phẩm và tồn kho real-time
 - ✅ Tối ưu vị trí lưu trữ với AI
 - ✅ Quản lý đơn hàng và nhà cung cấp
-- ✅ Báo cáo & phân tích chuyên sâu
-- ✅ Phân quyền chi tiết theo vai trò
+- ✅ Báo cáo & phân tích chuyên sâu (6 loại báo cáo)
+- ✅ Phân quyền chi tiết theo vai trò (4 vai trò)
 - ✅ Dark mode & responsive design
+- ✅ Import/Export dữ liệu (Excel, PDF)
+- ✅ Quét mã vạch, Kiểm kê kho
+- ✅ Thông báo realtime
 
 **Công nghệ sử dụng:**
-- Frontend: React 18 + Vite
-- Styling: Tailwind CSS
-- Icons: Lucide React
-- Routing: React Router v6
-- Charts: Recharts
+| Công nghệ | Phiên bản | Mục đích |
+|-----------|-----------|----------|
+| React | 18 | Frontend framework |
+| Vite | 5 | Build tool |
+| Tailwind CSS | 3 | Styling |
+| Lucide React | - | Icons |
+| React Router | v6 | Routing |
+| Recharts | 2 | Charts (Line, Bar, Pie) |
 
 ---
 
 ## 🏗️ Cấu Trúc Ứng Dụng
 
 ```
-src/
-├── components/          # Components tái sử dụng
-│   ├── Header.jsx      # Header chính
-│   ├── Sidebar.jsx     # Sidebar navigation
-│   ├── KPICards.jsx    # KPI cards cho Dashboard
-│   ├── InventoryChart.jsx  # Line chart tồn kho
-│   ├── TopProducts.jsx # Top 5 sản phẩm bán chạy
-│   ├── ExpiringProducts.jsx # Sản phẩm sắp hết hạn
-│   └── LowInventory.jsx # Sản phẩm tồn kho thấp
-├── pages/              # Các trang chính
-│   ├── Login.jsx       # Trang đăng nhập
-│   ├── Dashboard.jsx   # Dashboard chính
-│   ├── Products.jsx    # Quản lý sản phẩm
-│   ├── ProductDetail.jsx # Chi tiết sản phẩm
-│   ├── InventoryManagement.jsx # Quản lý tồn kho
-│   ├── CreateStockIn.jsx # Tạo phiếu nhập kho
-│   ├── BinLocation.jsx # Quản lý vị trí lưu trữ
-│   ├── Orders.jsx      # Quản lý đơn hàng
-│   ├── Suppliers.jsx   # Quản lý nhà cung cấp
-│   ├── Employees.jsx   # Quản lý nhân viên
-│   ├── Profile.jsx     # Cài đặt tài khoản
-│   ├── Settings.jsx    # Cài đặt hệ thống
-│   └── Reports.jsx     # Báo cáo & thống kê
-├── contexts/
-│   └── ThemeContext.jsx # Quản lý dark mode
-├── App.jsx             # Main app component
-└── main.jsx            # Entry point
+kho-ai/
+├── public/
+│   └── logo.svg                    # Logo ứng dụng
+├── src/
+│   ├── components/                 # Components tái sử dụng
+│   │   ├── Sidebar.jsx             # Sidebar navigation (250px)
+│   │   └── Header.jsx              # Header chính (nếu có)
+│   ├── pages/                      # 17 trang chính
+│   │   ├── Login.jsx               # Auth: Đăng nhập
+│   │   ├── ForgotPassword.jsx      # Auth: Quên mật khẩu
+│   │   ├── Dashboard.jsx           # Trang chủ: KPIs + Charts
+│   │   ├── Products.jsx            # CRUD: Sản phẩm
+│   │   ├── ProductDetail.jsx       # CRUD: Chi tiết SP (4 tabs)
+│   │   ├── InventoryManagement.jsx # Kho: Quản lý tồn kho
+│   │   ├── CreateStockIn.jsx       # Kho: Nhập kho
+│   │   ├── CreateStockOut.jsx      # Kho: Xuất kho
+│   │   ├── InventoryCheck.jsx      # Kho: Kiểm kê
+│   │   ├── BinLocation.jsx         # Kho: Vị trí lưu trữ (2D/3D)
+│   │   ├── Orders.jsx              # Đơn hàng: Danh sách
+│   │   ├── OrderDetail.jsx         # Đơn hàng: Chi tiết
+│   │   ├── Suppliers.jsx           # NCC: Danh sách
+│   │   ├── Employees.jsx           # NV: Danh sách + phân quyền
+│   │   ├── Reports.jsx             # Báo cáo: 6 loại biểu đồ
+│   │   ├── Profile.jsx             # Cá nhân: 4 tabs cài đặt
+│   │   ├── Settings.jsx            # Hệ thống: 7 menu cấu hình
+│   │   └── Notifications.jsx       # Thông báo: Real-time
+│   ├── contexts/
+│   │   └── ThemeContext.jsx         # Dark mode context
+│   ├── App.jsx                     # Root: Routes + Layout
+│   ├── index.css                   # Global styles + Scrollbar
+│   └── main.jsx                    # Entry point
+├── tailwind.config.js              # Tailwind config
+├── vite.config.js                  # Vite config
+├── package.json                    # Dependencies
+└── DOCUMENTATION.md                # Tài liệu này
 ```
+
+---
+
+## 🏛️ Cấu Trúc Layout Chung
+
+### 1. Layout Auth Pages (Login, ForgotPassword)
+
+```
+App.jsx: <Router>
+  └── Route path="/login" → Login.jsx
+  └── Route path="/forgot-password" → ForgotPassword.jsx
+```
+
+**Cấu trúc CSS:**
+```html
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
+  <!-- Cột trái: Branding (hidden on mobile) -->
+  <div class="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary to-blue-700 ...">
+    <!-- Gradient xanh dương, Logo, Slogan -->
+  </div>
+  
+  <!-- Cột phải: Form -->
+  <div class="flex-1 flex items-center justify-center p-8">
+    <div class="w-full max-w-md">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl ...">
+        <!-- Form content -->
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+**Scroll behavior:** `min-h-screen` (full viewport, body scroll)
+
+---
+
+### 2. Layout Dashboard Pages (có Sidebar)
+
+**App.jsx cấu trúc root:**
+```html
+<div class="flex h-screen bg-gray-50">
+  <!-- Sidebar: Fixed, Full height -->
+  <Sidebar />
+  
+  <!-- Content Wrapper: Flex, overflow-hidden -->
+  <div class="flex-1 flex flex-col overflow-hidden ml-64">
+    <Routes>
+      <!-- Mỗi page tự quản lý scroll -->
+      <Route path="/" element={<Dashboard />} />
+      ...
+    </Routes>
+  </div>
+</div>
+```
+
+**Mỗi page có cấu trúc:**
+```html
+<div class="flex flex-col overflow-y-auto bg-gray-50 dark:bg-gray-900 pb-6">
+  <!-- Header: Fixed top, không scroll -->
+  <div class="bg-white dark:bg-gray-800 shadow-sm border-b ...">
+    <div class="px-6 py-4">
+      <h1 class="text-2xl font-bold">Page Title</h1>
+      <p class="text-sm text-gray-600">Subtitle</p>
+    </div>
+  </div>
+  
+  <!-- Content: Scroll được, có padding-bottom 24px (pb-6) -->
+  <div class="p-6">
+    ...
+    <!-- Tables, Cards, Forms -->
+    ...
+  </div>
+</div>
+```
+
+**Giải thích CSS classes:**
+| Class | Mục đích |
+|-------|----------|
+| `flex flex-col` | Flex container dọc, header cố định, content scroll |
+| `overflow-y-auto` | Chỉ content được scroll, không scroll body |
+| `pb-6` | Padding bottom 24px để tránh bị Taskbar che |
+| `ml-64` | Margin left 256px (bằng width sidebar) |
 
 ---
 
@@ -68,746 +168,1325 @@ src/
 ### 1. 🔐 Trang Đăng Nhập (Login)
 
 **Route:** `/login`
+**Auth:** Public (không cần đăng nhập)
 
-**Mô tả:** Trang đăng nhập cho người dùng, hỗ trợ đăng nhập bằng email hoặc số điện thoại.
+**File:** `src/pages/Login.jsx`
+**Layout:** Auth Layout (2 cột, không sidebar)
 
-**Layout:**
-- **Desktop (lg+):** 2 cột
-  - Cột trái (50%): Branding với gradient xanh dương, logo, slogan, tính năng nổi bật
-  - Cột phải (50%): Form đăng nhập
-- **Mobile:** Chỉ hiển thị form đăng nhập
+**Cấu trúc HTML:**
+```html
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
+  
+  <!-- LEFT: Branding Column (50%) - Desktop only -->
+  <div class="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary to-blue-700 text-white p-12 flex-col justify-between relative overflow-hidden">
+    <!-- Background circles decoration -->
+    <div class="absolute inset-0 opacity-10">
+      <div class="absolute top-0 left-0 w-96 h-96 bg-white rounded-full -translate-x-1/2 -translate-y-1/2"></div>
+      <div class="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full translate-x-1/2 translate-y-1/2"></div>
+    </div>
+    
+    <!-- Logo area -->
+    <div class="relative z-10">
+      <div class="w-16 h-16 bg-white rounded-xl flex items-center justify-center">
+        <Lock class="w-10 h-10 text-primary" />
+      </div>
+      <h1 class="text-3xl font-bold">KHO AI</h1>
+      <p class="text-blue-100 text-sm">Quản lý kho thông minh</p>
+    </div>
+    
+    <!-- Features list -->
+    <div class="relative z-10 flex-1 flex flex-col justify-center">
+      <h2 class="text-4xl font-bold mb-4">Quản lý kho thông minh</h2>
+      <p class="text-blue-100 text-lg mb-8">Giải pháp quản lý kho hàng toàn diện</p>
+      <!-- 3 feature items with dots -->
+    </div>
+  </div>
 
-**Các thành phần:**
-
-#### Form Đăng Nhập
+  <!-- RIGHT: Form Column (50%) -->
+  <div class="flex-1 flex items-center justify-center p-8">
+    <div class="w-full max-w-md">
+      <!-- Mobile Logo (hidden on desktop) -->
+      <div class="lg:hidden flex items-center justify-center gap-3 mb-8">...</div>
+      
+      <!-- Form Card -->
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-200 dark:border-gray-700">
+        <h2 class="text-3xl font-bold mb-2">Đăng nhập</h2>
+        <p class="text-sm text-gray-600 mb-8">Chào mừng bạn quay trở lại!</p>
+        
+        <form class="space-y-6">
+          <!-- Login Type Toggle (Email/Phone) -->
+          <div class="flex gap-2 p-1 bg-gray-100 dark:bg-gray-700 rounded-lg">
+            <button class="flex-1 py-2 px-4 rounded-md text-sm font-medium ...">
+              <Mail class="w-4 h-4 inline mr-1" /> Email
+            </button>
+            <button class="flex-1 py-2 px-4 rounded-md text-sm font-medium ...">
+              <Phone class="w-4 h-4 inline mr-1" /> Số điện thoại
+            </button>
+          </div>
+          
+          <!-- Email/Phone Input with icon -->
+          <div class="relative">
+            <Mail class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input type="email" class="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary" />
+          </div>
+          
+          <!-- Password Input with show/hide -->
+          <div class="relative">
+            <Lock class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input type="password" class="w-full pl-10 pr-12 py-3 border rounded-lg ..." />
+            <button class="absolute right-3 top-1/2 transform -translate-y-1/2">
+              <Eye/EyeOff class="w-5 h-5" />
+            </button>
+          </div>
+          
+          <!-- Remember me + Forgot password -->
+          <div class="flex items-center justify-between">
+            <label class="flex items-center gap-2">
+              <input type="checkbox" class="w-4 h-4 text-primary rounded" />
+              <span class="text-sm text-gray-700">Ghi nhớ đăng nhập</span>
+            </label>
+            <Link to="/forgot-password" class="text-sm text-primary hover:underline">
+              Quên mật khẩu?
+            </Link>
+          </div>
+          
+          <!-- Submit button -->
+          <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-600 font-medium text-lg">
+            ĐĂNG NHẬP
+          </button>
+          
+          <!-- Social login divider -->
+          <div class="relative">
+            <div class="absolute inset-0 flex items-center">
+              <div class="w-full border-t border-gray-300"></div>
+            </div>
+            <div class="relative flex justify-center text-sm">
+              <span class="px-2 bg-white text-gray-500">Hoặc đăng nhập với</span>
+            </div>
+          </div>
+          
+          <!-- Social buttons -->
+          <div class="grid grid-cols-2 gap-3">
+            <button class="flex items-center justify-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50">
+              <svg class="w-5 h-5" /> Google
+            </button>
+            <button class="flex items-center justify-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50">
+              Zalo
+            </button>
+          </div>
+        </form>
+        
+        <!-- Register link -->
+        <p class="mt-6 text-center text-sm text-gray-600">
+          Chưa có tài khoản?
+          <a href="#" class="text-primary font-medium hover:underline">Đăng ký dùng thử miễn phí</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
 ```
-┌─────────────────────────────────────┐
-│  Đăng nhập                          │
-│  Chào mừng bạn quay trở lại!        │
-├─────────────────────────────────────┤
-│  [Email] [Số điện thoại]  ← Toggle  │
-│                                     │
-│  Email/SĐT Input                    │
-│  ┌─────────────────────────────┐    │
-│  │ 📧 your@email.com           │    │
-│  └─────────────────────────────┘    │
-│                                     │
-│  Mật khẩu                           │
-│  ┌─────────────────────────────┐    │
-│  │ 🔒 Nhập mật khẩu    👁️     │    │
-│  └─────────────────────────────┘    │
-│                                     │
-│  ☑ Ghi nhớ đăng nhập               │
-│  Quên mật khẩu?                     │
-│                                     │
-│  [     ĐĂNG NHẬP     ] ← Button     │
-│                                     │
-│  ─────── Hoặc đăng nhập với ──────  │
-│                                     │
-│  [Google]  [Zalo]                   │
-│                                     │
-│  Chưa có tài khoản?                 │
-│  Đăng ký dùng thử miễn phí         │
-└─────────────────────────────────────┘
-```
 
-**Các nút và chức năng:**
-- **Toggle Email/Phone:** Chuyển đổi giữa đăng nhập bằng email hoặc SĐT
-- **Show/Hide Password:** Hiển thị/ẩn mật khẩu (icon Eye/EyeOff)
-- **Checkbox "Ghi nhớ đăng nhập":** Lưu thông tin đăng nhập
-- **Link "Quên mật khẩu?":** Chuyển đến trang quên mật khẩu
-- **Button "Đăng nhập":** Submit form đăng nhập
-- **Button "Google":** Đăng nhập bằng Google OAuth
-- **Button "Zalo":** Đăng nhập bằng Zalo OAuth
-- **Link "Đăng ký dùng thử miễn phí":** Chuyển đến trang đăng ký
+**States:**
+| State | UI |
+|-------|-----|
+| Default | Form trống, tất cả inputs enabled |
+| Loading | Button "Đăng nhập" → spinner/disabled, inputs disabled |
+| Error | Alert đỏ + error message |
+| Success | Redirect to Dashboard |
+
+**CSS Classes chi tiết:**
+- Container: `min-h-screen bg-gray-50 dark:bg-gray-900 flex`
+- Branding: `hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary to-blue-700`
+- Form card: `bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-200`
+- Input: `w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary`
+- Button primary: `w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-600 font-medium text-lg shadow-sm`
 
 ---
 
 ### 2. 📊 Dashboard (Trang Chủ)
 
 **Route:** `/`
+**Auth:** Required
 
-**Mô tả:** Trang tổng quan với các chỉ số KPI, biểu đồ và thông tin quan trọng.
+**File:** `src/pages/Dashboard.jsx`
+**Layout:** Dashboard Layout (có sidebar)
 
-**Layout:**
+**Cấu trúc HTML:**
+```html
+<div class="flex flex-col overflow-y-auto bg-gray-50 dark:bg-gray-900 pb-6">
+  <!-- HEADER -->
+  <div class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+    <div class="px-6 py-4">
+      <div class="flex items-center justify-between">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+        <div class="flex items-center gap-4">
+          <!-- Notification icon with badge -->
+          <button class="relative">
+            <Bell class="w-6 h-6 text-gray-600 dark:text-gray-300" />
+            <span class="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white text-xs rounded-full flex items-center justify-center">3</span>
+          </button>
+          <!-- Avatar -->
+          <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-medium">NV</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="p-6 space-y-6">
+    
+    <!-- ROW 1: 4 KPI Cards (grid 4 cột) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <!-- Card 1: Tổng sản phẩm -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+            <Package class="w-6 h-6 text-primary" />
+          </div>
+        </div>
+        <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400">Tổng sản phẩm</h3>
+        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-1">12,847</p>
+        <div class="flex items-center gap-1 mt-2">
+          <TrendingUp class="w-4 h-4 text-green-600" />
+          <span class="text-sm font-medium text-green-600">+12.5%</span>
+          <span class="text-sm text-gray-500">vs tháng trước</span>
+        </div>
+      </div>
+      
+      <!-- Card 2: Đơn hàng hôm nay (bg-green-100, icon ShoppingCart) -->
+      <!-- Card 3: Doanh thu tháng (bg-purple-100, icon TrendingUp) -->
+      <!-- Card 4: Cảnh báo tồn kho (bg-orange-100, icon AlertTriangle) -->
+    </div>
+
+    <!-- ROW 2: Chart (70%) + Top Products (30%) -->
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      <!-- Line Chart (70% = col-span-3) -->
+      <div class="lg:col-span-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <h3 class="text-lg font-semibold mb-4">Biến động tồn kho 30 ngày</h3>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="date" />
+            <YAxis />
+            <Tooltip />
+            <Line type="monotone" dataKey="stock" stroke="#007BFF" strokeWidth={2} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+      
+      <!-- Top 5 Products (30% = col-span-2) -->
+      <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <h3 class="text-lg font-semibold mb-4">Top 5 sản phẩm bán chạy</h3>
+        <div class="space-y-4">
+          <!-- Product item x5 -->
+          <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-full bg-yellow-100 text-yellow-700 flex items-center justify-center font-bold text-sm">1</span>
+            <div class="flex-1">
+              <p class="text-sm font-medium">iPhone 15 Pro Max</p>
+              <div class="w-full bg-gray-200 rounded-full h-2 mt-1">
+                <div class="bg-primary h-2 rounded-full" style="width: 85%"></div>
+              </div>
+            </div>
+            <span class="text-sm font-semibold text-gray-900">245</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 3: 2 Tables (50/50) -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Table 1: Sản phẩm sắp hết hạn -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h3 class="font-semibold">Sản phẩm sắp hết hạn</h3>
+        </div>
+        <table class="w-full">...</table>
+      </div>
+      
+      <!-- Table 2: Tồn kho thấp -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h3 class="font-semibold">Tồn kho thấp</h3>
+        </div>
+        <table class="w-full">...</table>
+      </div>
+    </div>
+
+  </div>
+</div>
 ```
-┌─────────────────────────────────────────────────────────┐
-│ Header: Logo | Search Bar | 🔔 Badge | 👤 Avatar | 🌙   │
-├──────────┬──────────────────────────────────────────────┤
-│          │  Row 1: 4 KPI Cards (grid 4 cột)            │
-│ Sidebar  │  ┌────┐ ┌────┐ ┌────┐ ┌────┐              │
-│ 250px    │  │ KPI│ │ KPI│ │ KPI│ │ KPI│              │
-│          │  └────┘ └────┘ └────┘ └────┘              │
-│ Dashboard│                                              │
-│ Products │  Row 2: Chart + Top Products (70/30)        │
-│ Inventory│  ┌──────────────┬─────────────┐             │
-│ Bin Loc  │  │ Line Chart   │ Top 5 Sản   │             │
-│ Orders   │  │ 30 ngày      │ phẩm bán    │             │
-│ Suppliers│  │              │ chạy         │             │
-│ Employees│  └──────────────┴─────────────┘             │
-│ Reports  │                                              │
-│ Profile  │  Row 3: 2 Tables (50/50)                    │
-│ Settings │  ┌────────────────┬────────────────┐        │
-│          │  │ Sắp hết hạn    │ Tồn kho thấp  │        │
-│          │  │ (5-7 dòng)     │ (5-7 dòng)     │        │
-│          │  └────────────────┴────────────────┘        │
-└──────────┴──────────────────────────────────────────────┘
-```
 
-**Các thành phần chính:**
+**Components:**
+| Component | Props | Mô tả |
+|-----------|-------|-------|
+| KPI Cards | title, value, change, icon, color | 4 card chỉ số |
+| Line Chart | data, height | Biến động tồn kho 30 ngày |
+| Top Products | items: {name, sold, percent} | Top 5 bán chạy |
+| Expiring Table | items: {name, lot, expiry, daysLeft, qty} | Sắp hết hạn |
+| Low Inventory | items: {name, sku, stock, min, status} | Tồn kho thấp |
 
-#### KPI Cards (4 cards)
-1. **Tổng sản phẩm** (Package icon - xanh dương)
-   - Số lượng: 12,847
-   - Thay đổi: +12.5% (xanh lá)
-   
-2. **Đơn hàng hôm nay** (ShoppingCart icon - xanh lá)
-   - Số lượng: 1,234
-   - Thay đổi: +8.2% (xanh lá)
-   
-3. **Doanh thu tháng** (TrendingUp icon - tím)
-   - Giá trị: ₫2.4B
-   - Thay đổi: +23.1% (xanh lá)
-   
-4. **Cảnh báo tồn kho** (AlertTriangle icon - cam)
-   - Số lượng: 23
-   - Thay đổi: -5.3% (đỏ)
-
-#### Line Chart
-- **Tiêu đề:** "Biến động tồn kho 30 ngày"
-- **Dữ liệu:** 7 điểm từ 01/11 đến 30/11
-- **Màu:** Đường xanh dương (#007BFF)
-- **Interactive:** Tooltip khi hover
-
-#### Top 5 Sản phẩm bán chạy
-- **Tiêu đề:** "Top 5 sản phẩm bán chạy" (Trophy icon)
-- **Hiển thị:** Rank, Tên SP, % bán, Số lượng đã bán
-- **Màu rank:** Vàng (1), Xám (2), Cam (3), Xanh (4-5)
-
-#### Bảng Sản phẩm sắp hết hạn
-- **Cột:** Sản phẩm | Lô | HSD | Còn lại | SL
-- **Badge màu:** Đỏ (≤3 ngày), Cam (≤5 ngày), Vàng (>5 ngày)
-
-#### Bảng Tồn kho thấp
-- **Cột:** Sản phẩm | SKU | Tồn kho | Tối thiểu | Trạng thái
-- **Progress bar:** Hiển thị % so với mức tối thiểu
+**Grid system:**
+- Row 1: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4` (4 KPI cards)
+- Row 2: `grid-cols-1 lg:grid-cols-5` (Chart 3/5 + Top 2/5)
+- Row 3: `grid-cols-1 lg:grid-cols-2` (2 tables)
 
 ---
 
 ### 3. 📦 Quản Lý Sản Phẩm (Products)
 
 **Route:** `/products`
+**Auth:** Required
 
-**Mô tả:** Danh sách tất cả sản phẩm với khả năng tìm kiếm, lọc và xem chi tiết.
+**File:** `src/pages/Products.jsx`
 
-**Layout:**
+**Cấu trúc HTML:**
+```html
+<div class="flex flex-col overflow-y-auto bg-gray-50 dark:bg-gray-900 pb-6">
+  <!-- HEADER với button "Thêm sản phẩm" -->
+  <div class="bg-white dark:bg-gray-800 shadow-sm border-b ...">
+    <div class="px-6 py-4 flex justify-between items-center">
+      <h1 class="text-2xl font-bold">Quản lý Sản phẩm</h1>
+      <button class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg">
+        <Plus class="w-5 h-5" />
+        <span>Thêm sản phẩm</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="p-6">
+    <!-- Filter Bar -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border ...">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Search Input -->
+        <div>
+          <label>Tìm kiếm</label>
+          <div class="relative">
+            <Search class="absolute left-3 top-1/2 text-gray-400 w-5 h-5" />
+            <input type="text" placeholder="Tìm mã SP, tên sản phẩm..." class="w-full pl-10 pr-4 py-2 border rounded-lg" />
+          </div>
+        </div>
+        <!-- Category Dropdown -->
+        <div>
+          <label>Danh mục</label>
+          <div class="relative">
+            <select class="w-full px-3 py-2 border rounded-lg appearance-none">
+              <option>Tất cả danh mục</option>
+              <option>Điện tử</option>
+              <option>Thực phẩm</option>
+              <option>Mỹ phẩm</option>
+            </select>
+            <ChevronDown class="absolute right-3 top-1/2 text-gray-400" />
+          </div>
+        </div>
+        <!-- Status Dropdown -->
+        ...
+      </div>
+    </div>
+
+    <!-- Products Table -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-gray-50 dark:bg-gray-700 border-b">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-600">Mã SP</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-600">Tên sản phẩm</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-600">Danh mục</th>
+              <th class="px-4 py-3 text-right text-xs font-semibold uppercase text-gray-600">Giá bán</th>
+              <th class="px-4 py-3 text-center text-xs font-semibold uppercase text-gray-600">Tồn kho</th>
+              <th class="px-4 py-3 text-center text-xs font-semibold uppercase text-gray-600">Trạng thái</th>
+              <th class="px-4 py-3 text-center text-xs font-semibold uppercase text-gray-600">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+            <!-- Dynamic rows -->
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+              <td class="px-4 py-3"><span class="font-mono font-medium">SP001</span></td>
+              <td class="px-4 py-3">
+                <Link to="/products/SP001" class="text-primary hover:underline">iPhone 15 Pro Max</Link>
+              </td>
+              <td class="px-4 py-3"><span>Điện tử</span></td>
+              <td class="px-4 py-3 text-right"><span class="font-semibold">25.000.000đ</span></td>
+              <td class="px-4 py-3 text-center"><span class="font-bold">45</span></td>
+              <td class="px-4 py-3 text-center">
+                <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700 border border-green-300">Active</span>
+              </td>
+              <td class="px-4 py-3">
+                <div class="flex justify-center gap-2">
+                  <button class="p-1 text-blue-600 hover:bg-blue-50 rounded"><Eye class="w-4 h-4" /></button>
+                  <button class="p-1 text-green-600 hover:bg-green-50 rounded"><Edit2 class="w-4 h-4" /></button>
+                  <button class="p-1 text-red-600 hover:bg-red-50 rounded"><Trash2 class="w-4 h-4" /></button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Pagination -->
+      <div class="px-4 py-3 border-t flex justify-between items-center">
+        <span class="text-sm text-gray-700">Hiển thị 1 đến 8 của 8 kết quả</span>
+        <div class="flex gap-2">
+          <button class="px-3 py-1 border rounded disabled:opacity-50" disabled>Trước</button>
+          <button class="px-3 py-1 bg-primary text-white rounded">1</button>
+          <button class="px-3 py-1 border rounded hover:bg-gray-50">Sau</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 ```
-┌─────────────────────────────────────────────────────────┐
-│ Header: Quản lý Sản phẩm | [+ Thêm sản phẩm]           │
-├─────────────────────────────────────────────────────────┤
-│ Filter Bar:                                             │
-│ [Tìm kiếm...] [Danh mục ▼] [Trạng thái ▼]             │
-├─────────────────────────────────────────────────────────┤
-│ Table:                                                  │
-│ Mã SP | Tên SP | Danh mục | Giá bán | Tồn | Status | ⚙️│
-│ ─────────────────────────────────────────────────────── │
-│ SP001 | iPhone  | Điện tử  | 25tr    | 45  | Active | 👁️✏️🗑│
-│ SP002 | Samsung | Điện tử  | 22tr    | 8   | Low    | 👁️✏️🗑│
-│ ...                                                    │
-│                                                         │
-│ Pagination: Trước | 1 | Sau                            │
-└─────────────────────────────────────────────────────────┘
+
+**Data Flow:**
+```javascript
+// State management
+const [searchQuery, setSearchQuery] = useState('')
+const [selectedCategory, setSelectedCategory] = useState('all')
+
+// Sample data
+const products = [
+  { id, code, name, category, price, stock, status },
+  ...
+]
+
+// Format currency
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
+}
 ```
 
-**Các nút và chức năng:**
-
-#### Header
-- **Button "+ Thêm sản phẩm":** Chuyển đến trang tạo sản phẩm mới
-
-#### Filter Bar
-- **Search Input:** Tìm kiếm theo mã SP hoặc tên sản phẩm
-- **Dropdown "Danh mục":** Lọc theo danh mục (Điện tử, Thực phẩm, Mỹ phẩm, Khác)
-- **Dropdown "Trạng thái":** Lọc theo trạng thái (Active/Inactive)
-
-#### Table Actions (mỗi row)
-- **Eye icon (Xem):** Xem chi tiết sản phẩm → `/products/:code`
-- **Edit icon (Sửa):** Chỉnh sửa thông tin sản phẩm
-- **Delete icon (Xóa):** Xóa sản phẩm (có confirm)
-
-#### Click vào tên sản phẩm
-- Chuyển đến trang **Product Detail**
+**CSS Classes chi tiết:**
+- Table head: `bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600`
+- Table row: `hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors`
+- Table cell: `px-4 py-3 text-sm`
+- Status badge: `inline-flex px-2 py-1 text-xs font-medium rounded-full border`
 
 ---
 
 ### 4. 🔍 Chi Tiết Sản Phẩm (Product Detail)
 
 **Route:** `/products/:code`
+**Auth:** Required
 
-**Mô tả:** Hiển thị thông tin chi tiết sản phẩm với 4 tabs.
+**File:** `src/pages/ProductDetail.jsx`
 
-**Layout:**
+**Cấu trúc HTML:**
+```html
+<div class="flex flex-col overflow-y-auto bg-gray-50 dark:bg-gray-900 pb-6">
+  <!-- HEADER với 3 actions buttons -->
+  <div class="bg-white dark:bg-gray-800 shadow-sm border-b ...">
+    <div class="px-6 py-4">
+      <div class="flex items-center justify-between">
+        <!-- Left: Title + Product Code -->
+        <div>
+          <h1 class="text-2xl font-bold">Chi tiết Sản phẩm</h1>
+          <p class="text-sm text-gray-600">Mã SP: <span class="font-mono font-semibold text-primary">SP001</span></p>
+        </div>
+        <!-- Right: Action Buttons -->
+        <div class="flex gap-2">
+          <button class="bg-primary text-white px-4 py-2 rounded-lg"><Edit2 /> Chỉnh sửa</button>
+          <button class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg"><Printer /> In mã vạch</button>
+          <button class="bg-red-600 text-white px-4 py-2 rounded-lg"><Trash2 /> Xóa</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="p-6">
+    <!-- TABS Navigation -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border ... mb-6">
+      <div class="border-b border-gray-200">
+        <nav class="flex -mb-px overflow-x-auto">
+          <button class="flex items-center gap-2 px-6 py-4 border-b-2 border-primary text-primary font-medium">
+            <FileText class="w-4 h-4" /> Thông tin chung
+          </button>
+          <button class="flex items-center gap-2 px-6 py-4 border-b-2 border-transparent text-gray-500">
+            <Package class="w-4 h-4" /> Tồn kho theo kho
+          </button>
+          <button class="flex items-center gap-2 px-6 py-4 border-b-2 border-transparent text-gray-500">
+            <Clock class="w-4 h-4" /> Lịch sử
+          </button>
+          <button class="flex items-center gap-2 px-6 py-4 border-b-2 border-transparent text-gray-500">
+            <Image class="w-4 h-4" /> Tài liệu
+          </button>
+        </nav>
+      </div>
+    </div>
+  </div>
+</div>
 ```
-┌─────────────────────────────────────────────────────────┐
-│ Header: Chi tiết Sản phẩm | [✏️ Chỉnh sửa] [🖨️ In] [🗑️]│
-│ Mã SP: SP001                                            │
-├─────────────────────────────────────────────────────────┤
-│ [Thông tin] [Tồn kho] [Lịch sử] [Tài liệu]             │
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│  Tab Content (thay đổi theo tab đang active)            │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
-```
 
-#### Tab 1: Thông tin chung
-**Layout 2 cột:**
-- **Cột trái (1/3):** Ảnh sản phẩm + Upload button
-- **Cột phải (2/3):** Form thông tin
+**4 Tabs chi tiết:**
 
-**Form fields:**
-- Mã sản phẩm (readonly)
-- Tên sản phẩm (editable)
-- Danh mục (dropdown)
-- Đơn vị tính (input)
-- Barcode/QR (input + scan button)
-- Trạng thái (Active/Inactive dropdown)
-- Giá vốn (input với $ icon)
-- Giá bán (input với $ icon)
-- Hạn sử dụng mặc định (input)
-- Lot tracking (checkbox)
+**Tab 1: Thông tin chung**
+- Layout 2 cột: `grid grid-cols-1 lg:grid-cols-3 gap-6`
+- Cột trái (1/3): `lg:col-span-1` - Ảnh sản phẩm + Upload
+- Cột phải (2/3): `lg:col-span-2` - Form fields (grid 2 cột)
+- Mỗi field có label + input/select với icon
+- Input disabled khi không ở edit mode
 
-#### Tab 2: Tồn kho theo kho
-**Bảng:**
-- Kho | Tồn thực tế | Tồn khả dụng | Vị trí
+**Tab 2: Tồn kho theo kho**
+- Bảng đơn giản: Kho | Tồn thực tế | Tồn khả dụng | Vị trí
+- Dữ liệu từ `inventoryByWarehouse` array
 
-#### Tab 3: Lịch sử nhập - xuất
-**Filters:**
-- Khoảng thời gian (7/30/90 ngày, 1 năm)
-- Loại giao dịch (Tất cả/Nhập/Xuất)
+**Tab 3: Lịch sử nhập-xuất**
+- Filter: Khoảng thời gian + Loại giao dịch
+- Bảng: Loại (icon) | Ngày | Số lượng | Mã phiếu | Kho
+- Import: icon `TrendingUp` màu xanh lá
+- Export: icon `TrendingDown` màu đỏ
 
-**Table:**
-- Loại (icon + text màu)
-- Ngày
-- Số lượng
-- Mã phiếu
-- Kho
+**Tab 4: Hình ảnh & Tài liệu**
+- Grid images: `grid grid-cols-2 md:grid-cols-4 gap-4`
+- Upload placeholder: border dashed
+- Documents list: file icon + tên + kích thước + download button
 
-#### Tab 4: Hình ảnh & Tài liệu
-- Grid upload hình ảnh
-- Danh sách tài liệu PDF với download button
-
-**Action Buttons (Header):**
-- **Chỉnh sửa:** Toggle edit mode cho form
-- **In mã vạch:** In barcode/QR code
-- **Xóa:** Xóa sản phẩm (màu đỏ)
+**Edit Mode:**
+- Button "Chỉnh sửa" toggle `isEditing` state
+- Edit mode: inputs enabled, có thể thay đổi
+- View mode: inputs disabled (class `disabled:bg-gray-100`)
 
 ---
 
 ### 5. 📥 Quản Lý Tồn Kho (Inventory Management)
 
 **Route:** `/inventory`
+**Auth:** Required
 
-**Mô tả:** Quản lý tồn kho toàn hệ thống với khả năng nhập/xuất/kiểm kê.
+**File:** `src/pages/InventoryManagement.jsx`
 
-**Layout:**
+**Cấu trúc HTML:**
+```html
+<div class="flex flex-col overflow-y-auto bg-gray-50 dark:bg-gray-900 pb-6">
+  <!-- HEADER với 3 action buttons -->
+  <div class="bg-white ...">
+    <div class="px-6 py-4">
+      <div class="flex justify-between">
+        <h1>Quản lý Tồn kho</h1>
+        <div class="flex gap-3">
+          <Link to="/inventory/create"><button class="bg-primary text-white px-4 py-2 rounded-lg"><Plus /> Nhập kho mới</button></Link>
+          <button class="bg-success text-white px-4 py-2 rounded-lg"><Plus /> Xuất kho mới</button>
+          <button class="bg-warning text-white px-4 py-2 rounded-lg"><Package /> Kiểm kê ngay</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="p-6">
+    <!-- Filter Bar: 4 dropdowns (Kho, Danh mục, Trạng thái, Tìm kiếm + Scan) -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border ...">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Kho dropdown -->
+        <!-- Danh mục dropdown -->
+        <!-- Trạng thái dropdown -->
+        <!-- Search input + Scan button -->
+      </div>
+    </div>
+
+    <!-- TABLE Desktop: hidden md:block -->
+    <div class="hidden md:block bg-white dark:bg-gray-800 rounded-lg shadow-sm border ...">
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr>
+              <th><input type="checkbox" /></th>  <!-- Select all -->
+              <th>Mã SP</th>
+              <th>Tên sản phẩm</th>
+              <th>Kho</th>
+              <th>Vị trí</th>
+              <th>Tồn thực tế</th>
+              <th>Tồn khả dụng</th>
+              <th>Hạn sử dụng</th>
+              <th>Trạng thái</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Row with status color: normal(green) / low(yellow) / critical(red) -->
+            <tr class="bg-green-50 hover:opacity-80 transition-opacity">
+              <td><input type="checkbox" /></td>
+              <td class="font-mono">SP001</td>
+              <td><Link to="/products/SP001">iPhone 15 Pro Max</Link></td>
+              <td><Package /> Kho Hà Nội</td>
+              <td><MapPin /> A-01-02</td>
+              <td class="font-bold text-center">45</td>
+              <td class="text-center">42</td>
+              <td><Calendar /> 2025-06-15</td>
+              <td><span class="bg-green-100 text-green-700 rounded-full px-2 py-1 text-xs">Bình thường</span></td>
+              <td><Eye /> <Edit2 /> <Trash2 /></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- Pagination -->
+    </div>
+
+    <!-- CARDS Mobile: md:hidden -->
+    <div class="md:hidden space-y-4">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-4 bg-green-50">
+        <!-- Card content: checkbox, code, name, status, details, actions -->
+      </div>
+    </div>
+  </div>
+</div>
 ```
-┌─────────────────────────────────────────────────────────┐
-│ Header: Quản lý Tồn kho                                 │
-│ [+ Nhập kho mới] [Xuất kho mới] [Kiểm kê ngay]         │
-├─────────────────────────────────────────────────────────┤
-│ Filters: [Kho ▼] [Danh mục ▼] [Trạng thái ▼]          │
-│         [Tìm kiếm...] [📷 Scan]                         │
-├─────────────────────────────────────────────────────────┤
-│ Table (Desktop) / Cards (Mobile)                        │
-│ ☐ | Mã | Tên | Kho | Vị trí | Thực tế | Khả dụng | ...│
-│ ─────────────────────────────────────────────────────── │
-│ ☐ | SP001 | iPhone | HN | A-01-02 | 45 | 42 | ...    │
-│                                                         │
-│ Pagination                                              │
-└─────────────────────────────────────────────────────────┘
-```
 
-**Row Colors (theo trạng thái):**
-- 🟢 Xanh lá: Bình thường
-- 🟡 Vàng: Thấp
-- 🔴 Đỏ: Nguy cấp
+**Row Status Colors:**
+| Status | Class | Ý nghĩa |
+|--------|-------|---------|
+| normal | `bg-green-50` | Tồn kho bình thường |
+| low | `bg-yellow-50` | Tồn kho thấp |
+| critical | `bg-red-50` | Tồn kho nguy cấp |
 
-**Action Buttons:**
-- **Eye:** Xem chi tiết
-- **Edit:** Chỉnh sửa
-- **Delete:** Xóa
+**Multi-select:**
+- Checkbox trong thead: toggle all
+- Checkbox mỗi row: toggle 1 item
+- State: `selectedRows` (array of ids)
 
-**Mobile Cards:**
-- Hiển thị dạng card thay vì table
-- Mỗi card có đầy đủ thông tin
-- Action buttons ở dưới cùng
+**Mobile/Desktop Responsive:**
+- Desktop (>=768px): `hidden md:block` table
+- Mobile (<768px): `md:hidden` cards
+- Mỗi card có: Code, Name, Warehouse, Location, Stock, Expiry, Actions
 
 ---
 
 ### 6. ➕ Tạo Phiếu Nhập Kho (Create Stock In)
 
 **Route:** `/inventory/create`
+**Auth:** Required
 
-**Mô tả:** Tạo phiếu nhập kho mới với danh sách sản phẩm.
+**File:** `src/pages/CreateStockIn.jsx`
 
-**Layout:**
+**Cấu trúc HTML:**
+```html
+<div class="flex flex-col overflow-y-auto bg-gray-50 dark:bg-gray-900 pb-24">
+  <!-- HEADER + Receipt Number -->
+  <div class="bg-white dark:bg-gray-800 shadow-sm border-b ...">
+    <div class="px-6 py-4">
+      <h1>Tạo phiếu nhập kho mới</h1>
+      <p>Số phiếu: <span class="font-mono font-semibold text-primary">NK-20260714-001</span></p>
+    </div>
+  </div>
+
+  <!-- CONTENT: max-w-7xl mx-auto -->
+  <div class="p-6 max-w-7xl mx-auto space-y-6">
+    <!-- Section 1: Thông tin chung (grid 2 cột) -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border ...">
+      <h2 class="text-lg font-semibold mb-4">Thông tin chung</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div><label><Calendar /> Ngày nhập</label><input type="date" /></div>
+        <div><label><User /> Nhà cung cấp</label><select>...</select></div>
+        <div><label><Warehouse /> Kho nhận</label><select>...</select></div>
+        <div><label><User /> Người nhập</label><input disabled /></div>
+        <div class="md:col-span-2"><label><FileText /> Ghi chú</label><textarea rows="3" /></div>
+      </div>
+    </div>
+
+    <!-- Section 2: Chi tiết sản phẩm (Table) -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border ...">
+      <div class="px-6 py-4 border-b flex justify-between">
+        <h2>Chi tiết sản phẩm</h2>
+        <div class="flex gap-2">
+          <button class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg"><Camera /> Quét mã</button>
+          <button class="bg-primary text-white px-4 py-2 rounded-lg"><Plus /> Thêm dòng</button>
+        </div>
+      </div>
+      <!-- Dynamic table with input fields -->
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr><th>Mã SP</th><th>Tên SP</th><th>SL</th><th>Đơn giá</th><th>Thành tiền</th><th>Vị trí</th><th>HSD</th><th>Lot</th><th></th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><input type="text" placeholder="Mã SP" /></td>
+              <td><input type="text" placeholder="Tên SP" /></td>
+              <td><input type="number" min="0" class="w-20 text-center" /></td>
+              <td><input type="number" min="0" class="w-32 text-right" /></td>
+              <td class="text-right font-semibold">250.000.000đ</td>
+              <td><MapPin /><input placeholder="Vị trí" /></td>
+              <td><input type="date" /></td>
+              <td><input placeholder="Lot" /></td>
+              <td><button class="text-red-600"><Trash2 /></button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Section 3: Summary (Gradient card) -->
+    <div class="bg-gradient-to-r from-primary to-blue-600 rounded-lg shadow-md p-6 text-white">
+      <div class="flex justify-between items-center">
+        <div><p class="text-blue-100 text-sm">Tổng số lượng</p><p class="text-3xl font-bold">10</p></div>
+        <div class="h-16 w-px bg-blue-400"></div>
+        <div><p class="text-blue-100 text-sm">Tổng tiền</p><p class="text-3xl font-bold">250.000.000đ</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FIXED FOOTER: Actions (Hủy, Lưu tạm, Xác nhận) -->
+  <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 shadow-lg z-10" style="margin-left: 256px">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-end gap-3">
+      <button class="border px-6 py-3 rounded-lg"><X /> Hủy</button>
+      <button class="border border-primary text-primary px-6 py-3 rounded-lg"><Save /> Lưu tạm</button>
+      <button class="bg-success text-white px-6 py-3 rounded-lg"><Check /> Xác nhận nhập kho</button>
+    </div>
+  </div>
+</div>
 ```
-┌─────────────────────────────────────────────────────────┐
-│ Header: Nhập kho mới                                   │
-├─────────────────────────────────────────────────────────┤
-│ Summary Cards:                                          │
-│ ┌──────────┐ ┌──────────┐ ┌──────────┐                 │
-│ │ Tổng SP  │ │ Tổng SL  │ │ Tổng tiền│                 │
-│ │   5      │ │  150     │ │ 50tr     │                 │
-│ └──────────┘ └──────────┘ └──────────┘                 │
-├─────────────────────────────────────────────────────────┤
-│ Product List:                                           │
-│ ┌──────────────────────────────────────────────────┐   │
-│ │ + Thêm sản phẩm                                  │   │
-│ ├──────────────────────────────────────────────────┤   │
-│ │ SP001 | iPhone 15 | 50 | 25tr | [🗑️]            │   │
-│ │ SP002 | Samsung  | 30 | 15tr | [🗑️]            │   │
-│ │ ...                                              │   │
-│ └──────────────────────────────────────────────────┘   │
-│                                                         │
-│ [Hủy]  [Lưu nháp]  [Xác nhận nhập kho]                 │
-└─────────────────────────────────────────────────────────┘
-```
 
-**Chức năng:**
-- Thêm sản phẩm vào danh sách
-- Nhập số lượng
-- Tự động tính tổng tiền
-- Validate trước khi lưu
+**Dynamic Product Rows:**
+- State: `products` array
+- `addProductRow()`: thêm row mới với default values
+- `removeProductRow(id)`: xóa row theo id
+- `updateProduct(id, field, value)`: cập nhật field trong row
+- `calculateTotal()`: sum of (quantity * unitPrice)
+
+**Summary Card:**
+- Background: `bg-gradient-to-r from-primary to-blue-600`
+- Hiển thị tổng số lượng và tổng tiền
+- Auto-calculate khi thay đổi products
+
+**Fixed Footer:**
+- Position: `fixed bottom-0`
+- Width adjusted: `margin-left: 256px` (sidebar width)
+- Z-index: `z-10` để luôn trên cùng
 
 ---
 
 ### 7. 📍 Quản Lý Vị Trí Lưu Trữ (Bin Location)
 
 **Route:** `/bin-location`
+**Auth:** Required
 
-**Mô tả:** Quản lý và theo dõi vị trí lưu trữ sản phẩm trong kho.
+**File:** `src/pages/BinLocation.jsx`
 
-**Layout:**
+**Cấu trúc HTML:**
+```html
+<div class="flex flex-col overflow-y-auto bg-gray-50 dark:bg-gray-900 pb-6">
+  <!-- HEADER với AI và View mode buttons -->
+  <div class="bg-white dark:bg-gray-800 shadow-sm border-b px-6 py-4">
+    <div class="flex items-center justify-between">
+      <div><h1>Quản lý Vị trí Lưu trữ</h1><p class="text-sm text-gray-600">Quản lý và theo dõi vị trí lưu trữ sản phẩm</p></div>
+      <div class="flex gap-3">
+        <button class="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-2 rounded-lg"><Sparkles /> Gợi ý vị trí tối ưu bằng AI</button>
+        <button class="bg-primary text-white px-4 py-2 rounded-lg"><Maximize2 /> Chuyển sang 3D</button>
+        <button class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg"><Printer /> In nhãn kệ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT: flex-1 flex -->
+  <div class="flex-1 flex overflow-hidden">
+    <!-- LEFT: Tree View (w-80) -->
+    <div class="w-80 bg-white border-r border-gray-200 overflow-y-auto">
+      <div class="p-4">
+        <h2>Cấu trúc kho</h2>
+        <!-- Warehouse > Rows > Shelves > Bins -->
+        <div class="space-y-1">
+          <div class="border rounded-lg p-3 bg-blue-50">
+            <div class="flex items-center gap-2 cursor-pointer" onClick={toggleNode('warehouse')}>
+              <ChevronDown/> <Warehouse/> <span>Kho Hà Nội</span>
+            </div>
+            <!-- Expandable rows -->
+            <div class="ml-6 mt-2">
+              <div class="border rounded-lg p-2 bg-white">
+                <div onClick={toggleNode('row1')}><ChevronRight/> <Box/> Dãy A</div>
+                <div class="ml-6 mt-1">
+                  <div class="border rounded p-2 bg-gray-50">
+                    <div onClick={toggleNode('shelf1')}><ChevronDown/> <Package/> Kệ A-01</div>
+                    <div class="ml-6 mt-1">
+                      <div class="flex items-center gap-2 p-1 rounded hover:bg-gray-100 cursor-pointer">
+                        <MapPin/> <span class="text-xs font-mono">A-01-01</span>
+                        <span class="text-xs truncate">iPhone 15</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Legend -->
+        <div class="mt-6 p-4 bg-gray-50 rounded-lg border">
+          <h3>Chú thích</h3>
+          <div class="space-y-2">
+            <div class="flex items-center gap-2"><div class="w-4 h-4 bg-green-100 border-2 border-green-300 rounded"></div> Trống</div>
+            <div class="flex items-center gap-2"><div class="w-4 h-4 bg-yellow-100 border-2 border-yellow-300 rounded"></div> Đang dùng</div>
+            <div class="flex items-center gap-2"><div class="w-4 h-4 bg-red-100 border-2 border-red-300 rounded"></div> Đầy</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Grid View (flex-1) -->
+    <div class="flex-1 overflow-y-auto p-6">
+      <h2>View 2D - Kệ A-01</h2>
+      <!-- 2D Grid -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+        <div class="border-2 rounded-lg p-4 cursor-move bg-green-100 border-green-300" draggable>
+          <GripVertical /> A-01-03
+          <Package /> Trống
+        </div>
+        <div class="border-2 rounded-lg p-4 cursor-move bg-yellow-100 border-yellow-300" draggable>
+          <GripVertical /> A-01-02
+          <p>Samsung S24</p>
+          <div class="w-full bg-gray-200 rounded-full h-2">
+            <div class="bg-yellow-500 h-2 rounded-full" style="width: 40%"></div>
+          </div>
+          <p>20/50 (40%)</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 ```
-┌─────────────────────────────────────────────────────────┐
-│ Header: Quản lý Vị trí Lưu trữ                         │
-│ [✨ AI Gợi ý] [2D/3D] [In nhãn kệ]                     │
-├──────────┬──────────────────────────────────────────────┤
-│ Tree View│  Grid View (2D/3D)                           │
-│          │                                              │
-│ Kho HN   │  ┌────┐ ┌────┐ ┌────┐ ┌────┐              │
-│ ├─ Dãy A │  │Bin │ │Bin │ │Bin │ │Bin │              │
-│ │ ├─Kệ01 │  │A-01│ │A-02│ │A-03│ │A-04│              │
-│ │ │ ├─Bin│  │    │ │ 📱 │ │    │ │ 💻 │              │
-│ │ │ │ ...│  └────┘ └────┘ └────┘ └────┘              │
-│ │ └─Kệ02 │                                              │
-│ └─ Dãy B │  Legend:                                     │
-│          │  🟢 Trống | 🟡 Đang dùng | 🔴 Đầy          │
-└──────────┴──────────────────────────────────────────────┘
-```
 
-**Tree View (bên trái):**
-- Warehouse → Row → Shelf → Bin
-- Expandable tree structure
-- Click để highlight bin trong grid
+**Tree View:**
+- Expandable: `expandedNodes` state
+- Toggle: `ChevronRight`/`ChevronDown` icons
+- Structure: Warehouse → Row (Dãy) → Shelf (Kệ) → Bin (Ô)
+- Mỗi level có background color khác nhau
 
-**Grid View (bên phải):**
-- **2D Mode:** Grid các bin với màu theo trạng thái
-  - 🟢 Xanh lá: Trống
-  - 🟡 Vàng: Đang dùng
-  - 🔴 Đỏ: Đầy
-- **3D Mode:** Placeholder (tích hợp Three.js sau)
+**2D Grid:**
+- Responsive grid: `grid-cols-2` đến `grid-cols-6`
+- Drag & Drop: `draggable`, `onDragStart`, `onDragOver`, `onDrop`
+- Bin colors: green (empty), yellow (in-use), red (full)
+- Progress bar: `(quantity/capacity) * 100%`
 
-**Drag & Drop:**
-- Kéo thả sản phẩm giữa các bin
-
-**Legend:**
-- Giải thích màu sắc cho từng trạng thái
+**3D View:**
+- Placeholder với border dashed
+- Text: "Tính năng đang được phát triển"
 
 ---
 
 ### 8. 🛒 Quản Lý Đơn Hàng (Orders)
 
 **Route:** `/orders`
+**Auth:** Required
 
-**Mô tả:** Quản lý đơn hàng từ tạo đến hoàn thành.
+**File:** `src/pages/Orders.jsx`
 
-**Layout:**
+**Cấu trúc HTML:**
+```html
+<div class="flex flex-col overflow-y-auto bg-gray-50 dark:bg-gray-900 pb-6">
+  <!-- HEADER + "Tạo đơn hàng mới" button -->
+  <div class="bg-white dark:bg-gray-800 shadow-sm border-b ...">
+    <div class="px-6 py-4 flex justify-between">
+      <h1>Quản lý Đơn hàng</h1>
+      <button class="bg-primary text-white px-4 py-2 rounded-lg"><Plus /> Tạo đơn hàng mới</button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="p-6">
+    <!-- Filter Bar: 5 filters (grid 5 cột) -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border ...">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div><label>Trạng thái</label><select>...</select></div>
+        <div><label>Kho</label><select>...</select></div>
+        <div><label>Thời gian</label><select>...</select></div>
+        <div class="lg:col-span-2"><label>Tìm kiếm</label><input placeholder="Tìm mã đơn, tên KH..." /></div>
+      </div>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr><th>Mã đơn</th><th>Khách hàng</th><th>Ngày tạo</th><th>Tổng tiền</th><th>SP</th><th>Trạng thái</th><th>Kho xuất</th><th>Thao tác</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="font-mono">DH20241114001</td>
+              <td><p class="font-medium">Nguyễn Văn A</p><p class="text-xs text-gray-500">0901234567</p></td>
+              <td>14/11/2024</td>
+              <td class="text-right font-semibold">12.500.000đ</td>
+              <td class="text-center">3 SP</td>
+              <td><span class="bg-yellow-100 text-yellow-700 rounded-full px-2 py-1 text-xs">Chờ xác nhận</span></td>
+              <td><MapPin /> Kho Hà Nội</td>
+              <td><Eye /> <Printer /> <X /></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- Pagination -->
+    </div>
+  </div>
+</div>
 ```
-┌─────────────────────────────────────────────────────────┐
-│ Header: Quản lý Đơn hàng | [+ Tạo đơn hàng mới]        │
-├─────────────────────────────────────────────────────────┤
-│ Filters: [Trạng thái ▼] [Kho ▼] [Thời gian ▼]         │
-│         [Tìm mã đơn/tên KH...]                          │
-├─────────────────────────────────────────────────────────┤
-│ Table:                                                  │
-│ Mã đơn | Khách hàng | Ngày | Tổng tiền | SP | Status   │
-│ ─────────────────────────────────────────────────────── │
-│ DH001  | Nguyễn Văn A | 14/11 | 12.5tr  | 3  | 🟡 Chờ │
-│ DH002  | Trần Thị B   | 14/11 | 8.5tr   | 2  | 🔵 Xác  │
-│ ...                                                    │
-│                                                         │
-│ Pagination                                              │
-└─────────────────────────────────────────────────────────┘
-```
 
-**Status Colors:**
-- 🟡 Vàng: Chờ xác nhận
-- 🔵 Xanh dương: Đã xác nhận
-- 🟣 Tím: Đang giao
-- 🟢 Xanh lá: Hoàn thành
-- 🔴 Đỏ: Hủy
+**5 Status Colors:**
+| Trạng thái | Màu | Class |
+|------------|-----|-------|
+| Chờ xác nhận | 🟡 Vàng | `bg-yellow-100 text-yellow-700 border-yellow-300` |
+| Đã xác nhận | 🔵 Xanh dương | `bg-blue-100 text-blue-700 border-blue-300` |
+| Đang giao | 🟣 Tím | `bg-purple-100 text-purple-700 border-purple-300` |
+| Hoàn thành | 🟢 Xanh lá | `bg-green-100 text-green-700 border-green-300` |
+| Hủy | 🔴 Đỏ | `bg-red-100 text-red-700 border-red-300` |
 
-**Action Buttons:**
-- **Eye (Xem chi tiết):** Mở modal chi tiết đơn hàng
-  - Thông tin khách hàng
-  - Danh sách sản phẩm + số lượng + giá
-  - Thông tin vận chuyển
-  - Nút "Xác nhận xuất kho" (nếu chưa xuất)
-- **Printer (In đơn):** In phiếu xuất kho
-- **X (Hủy):** Hủy đơn hàng (chỉ hiển thị khi chưa hoàn thành/hủy)
+**Action Buttons (mỗi row):**
+- `Eye` → Link to `/orders/:id` (OrderDetail)
+- `Printer` → In đơn (console.log)
+- `X` (Xóa) → Chỉ hiển thị khi status != 'cancelled' và status != 'completed'
 
 ---
 
 ### 9. 🏭 Quản Lý Nhà Cung Cấp (Suppliers)
 
 **Route:** `/suppliers`
+**Auth:** Required
 
-**Mô tả:** Quản lý thông tin nhà cung cấp và lịch sử giao dịch.
+**File:** `src/pages/Suppliers.jsx`
 
-**Layout:**
-```
-┌─────────────────────────────────────────────────────────┐
-│ Header: Quản lý Nhà cung cấp | [+ Thêm NCC mới]        │
-├─────────────────────────────────────────────────────────┤
-│ Filters: [Tìm kiếm...] [Trạng thái ▼]                  │
-│ Tổng: 5 nhà cung cấp                                   │
-├─────────────────────────────────────────────────────────┤
-│ Table:                                                  │
-│ Mã NCC | Tên NCC | SĐT | Email | Địa chỉ | Giao | ...  │
-│ ─────────────────────────────────────────────────────── │
-│ NCC001 | Apple   | 1900 | @apple | Hà Nội | 45  | ... │
-│ NCC002 | Samsung | 1900 | @samsung| TP.HCM | 38  | ... │
-│ ...                                                    │
-│                                                         │
-│ Pagination                                              │
-└─────────────────────────────────────────────────────────┘
+**Cấu trúc HTML:**
+```html
+<div class="flex flex-col overflow-y-auto bg-gray-50 dark:bg-gray-900 pb-6">
+  <!-- HEADER + "Thêm nhà cung cấp mới" -->
+  <div class="bg-white dark:bg-gray-800 shadow-sm border-b ...">
+    <div class="px-6 py-4 flex justify-between">
+      <h1>Quản lý Nhà cung cấp</h1>
+      <Link to="/suppliers/create"><button class="bg-primary text-white px-4 py-2 rounded-lg"><Plus /> Thêm nhà cung cấp mới</button></Link>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="p-6">
+    <!-- Filter: Search + Status + Total -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border ...">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div><input placeholder="Tìm mã NCC, tên nhà cung cấp..." /></div>
+        <div><select>...</select></div>
+        <div class="hidden lg:block"><p>Tổng: 5 nhà cung cấp</p></div>
+      </div>
+    </div>
+
+    <!-- Suppliers Table (9 columns) -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr><th>Mã NCC</th><th>Tên NCC</th><th>SĐT</th><th>Email</th><th>Địa chỉ</th><th>Giao</th><th>Giá trị</th><th>Status</th><th></th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="font-mono">NCC001</td>
+              <td><p class="font-medium">Apple Vietnam</p><p class="text-xs">LH: Nguyễn Văn A</p></td>
+              <td><Phone /> 19001234</td>
+              <td><Mail /> contact@apple.com.vn</td>
+              <td><MapPin /> Hà Nội</td>
+              <td class="text-center font-bold">45</td>
+              <td class="text-right font-semibold">2.500.000.000đ</td>
+              <td><span class="bg-green-100 text-green-700 rounded-full px-2 py-1 text-xs">Đang hợp tác</span></td>
+              <td><Eye /> <Edit2 /> <Trash2 /></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- Pagination -->
+    </div>
+  </div>
+</div>
 ```
 
 **Table Columns:**
-- Mã NCC (font monospace)
-- Tên nhà cung cấp + Người liên hệ
-- SĐT (icon Phone)
-- Email (icon Mail)
-- Địa chỉ (icon MapPin)
-- Số lần giao
-- Tổng giá trị (format VND)
-- Trạng thái (tag màu)
-- Actions: Xem, Sửa, Xóa
-
-**Status Colors:**
-- 🟢 Xanh lá: Đang hợp tác
-- 🔴 Đỏ: Ngừng
+1. Mã NCC (font-mono, font-medium)
+2. Tên NCC + Người liên hệ (2 dòng)
+3. SĐT (Phone icon)
+4. Email (Mail icon)
+5. Địa chỉ (MapPin icon, truncate)
+6. Số lần giao (font-bold, text-center)
+7. Tổng giá trị (font-semibold, text-right, format VND)
+8. Trạng thái (rounded-full badge)
+9. Actions (Eye, Edit2, Trash2 icons)
 
 ---
 
 ### 10. 👥 Quản Lý Nhân Viên (Employees)
 
 **Route:** `/employees`
+**Auth:** Required (Admin/Manager)
 
-**Mô tả:** Quản lý nhân viên và phân quyền chi tiết.
+**File:** `src/pages/Employees.jsx`
 
-**Layout:**
+**Cấu trúc HTML:**
+```html
+<div class="flex flex-col overflow-y-auto bg-gray-50 dark:bg-gray-900 pb-6">
+  <!-- HEADER + "Thêm nhân viên" -->
+  <div class="bg-white dark:bg-gray-800 shadow-sm border-b ...">
+    <div class="px-6 py-4 flex justify-between">
+      <h1>Quản lý Nhân viên</h1>
+      <Link to="/employees/create"><button class="bg-primary text-white px-4 py-2 rounded-lg"><Plus /> Thêm nhân viên</button></Link>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="p-6">
+    <!-- Filter: 4 filters (grid 4) -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border ...">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div><Search /> <input placeholder="Tìm mã NV, họ tên..." /></div>
+        <div><select>Vai trò</select></div>
+        <div><select>Kho</select></div>
+        <div><select>Trạng thái</select></div>
+      </div>
+    </div>
+
+    <!-- Employees Table -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr><th>Mã NV</th><th>Họ tên</th><th>SĐT</th><th>Email</th><th>Vai trò</th><th>Kho</th><th>Trạng thái</th><th>Thao tác</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="font-mono">NV001</td>
+              <td>
+                <div class="flex items-center gap-2">
+                  <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white text-sm font-medium">N</div>
+                  <span>Nguyễn Văn A</span>
+                </div>
+              </td>
+              <td><Phone /> 0901234567</td>
+              <td><Mail /> nguyenvana@khoai.com</td>
+              <td>Quản lý kho</td>
+              <td>Kho Hà Nội</td>
+              <td><span class="bg-green-100 text-green-700 rounded-full px-2 py-1 text-xs"><UserCheck /> Đang làm việc</span></td>
+              <td><Shield /> <Eye /> <Edit2 /> <Trash2 /></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- Pagination -->
+    </div>
+  </div>
+</div>
 ```
-┌─────────────────────────────────────────────────────────┐
-│ Header: Quản lý Nhân viên | [+ Thêm nhân viên]         │
-├─────────────────────────────────────────────────────────┤
-│ Filters: [Tìm kiếm...] [Vai trò ▼] [Kho ▼] [Status ▼] │
-├─────────────────────────────────────────────────────────┤
-│ Table:                                                  │
-│ Mã NV | Họ tên | SĐT | Email | Vai trò | Kho | Status │
-│ ─────────────────────────────────────────────────────── │
-│ NV001 | Nguyễn Văn A | 0901 | @email | QL kho | HN | 🟢│
-│ NV002 | Trần Thị B   | 0912 | @email | NV kho | HCM| 🟢│
-│ ...                                                    │
-│                                                         │
-│ Pagination                                              │
-└─────────────────────────────────────────────────────────┘
-```
 
-**Avatar:**
-- Circle với chữ cái đầu tên
-- Background gradient xanh dương
-
-**Action Buttons:**
-- **Shield icon (Phân quyền):** Mở modal phân quyền
-- **Eye (Xem):** Xem chi tiết nhân viên
-- **Edit (Sửa):** Chỉnh sửa thông tin
-- **Delete (Xóa):** Xóa nhân viên
-
-#### Modal Phân Quyền
-```
-┌─────────────────────────────────────────────────────────┐
-│ Phân quyền - Nguyễn Văn A                    [X]        │
-│ Vai trò: Quản lý kho                                    │
-├─────────────────────────────────────────────────────────┤
-│ Quyền truy cập:                                         │
-│ ☑ Nhập kho                                             │
-│   Tạo và xử lý phiếu nhập kho                          │
-│ ☑ Xuất kho                                             │
-│   Tạo và xử lý phiếu xuất kho                          │
-│ ☑ Quản lý tồn kho                                      │
-│   Xem và cập nhật tồn kho                               │
-│ ☑ Xem báo cáo                                          │
-│   Truy cập các báo cáo thống kê                         │
-│ ☑ Quản lý kho                                          │
-│   Quản lý vị trí và cấu trúc kho                        │
-│ ☐ Quản lý nhân viên                                    │
-│ ☐ Quản lý nhà cung cấp                                 │
-│ ☐ Quản lý sản phẩm                                     │
-├─────────────────────────────────────────────────────────┤
-│ [Hủy]  [Lưu phân quyền]                                 │
-└─────────────────────────────────────────────────────────┘
+**Permission Modal (overlay):**
+```html
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <!-- Header: Title + Employee Name + Close -->
+    <div class="p-6 border-b"><h2>Phân quyền - Nguyễn Văn A</h2><p>Vai trò: Quản lý kho</p></div>
+    <!-- Permissions List -->
+    <div class="p-6 space-y-3">
+      <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+        <input type="checkbox" class="w-4 h-4 text-primary rounded" checked />
+        <div><label>Nhập kho</label><p class="text-xs text-gray-500">Tạo và xử lý phiếu nhập kho</p></div>
+      </div>
+      <!-- 7 more permissions -->
+    </div>
+    <!-- Footer: Hủy + Lưu -->
+    <div class="p-6 border-t flex justify-end gap-3">
+      <button class="border px-4 py-2 rounded-lg">Hủy</button>
+      <button class="bg-primary text-white px-4 py-2 rounded-lg">Lưu phân quyền</button>
+    </div>
+  </div>
+</div>
 ```
 
 **8 Permissions:**
-1. Nhập kho
-2. Xuất kho
-3. Quản lý tồn kho
-4. Xem báo cáo
-5. Quản lý kho
-6. Quản lý nhân viên
-7. Quản lý nhà cung cấp
-8. Quản lý sản phẩm
+1. Nhập kho (`import`)
+2. Xuất kho (`export`)
+3. Quản lý tồn kho (`inventory`)
+4. Xem báo cáo (`reports`)
+5. Quản lý kho (`manage_warehouse`)
+6. Quản lý nhân viên (`manage_employees`)
+7. Quản lý nhà cung cấp (`manage_suppliers`)
+8. Quản lý sản phẩm (`manage_products`)
 
 ---
 
-### 11. ⚙️ Cài Đặt (Settings)
+### 11. ⚙️ Cài Đặt Hệ Thống (Settings)
 
 **Route:** `/settings`
+**Auth:** Required (Admin only)
 
-**Mô tả:** Cài đặt hệ thống dành cho Admin.
+**File:** `src/pages/Settings.jsx`
 
-**Layout:**
-```
-┌──────────┬──────────────────────────────────────────────┐
-│ Settings │  Content Area                                │
-│ Menu     │                                              │
-│          │  [Thông tin công ty]                         │
-│ 🏢 Thông │  - Logo upload                              │
-│   tin    │  - Tên công ty, MST, Địa chỉ, SĐT, Email    │
-│ 🏭 Quản  │  - Website                                  │
-│   lý kho │                                              │
-│ ⚙️ Cấu   │  [Quản lý kho]                              │
-│   hình   │  - Danh sách kho với progress bar           │
-│ 🔌 Tích  │  - Thêm/Sửa/Xóa kho                         │
-│   hợp    │                                              │
-│ 💾 Sao   │  [Cấu hình chung]                           │
-│   lưu    │  - Toggle switches                           │
-│ 👥 Quản  │                                              │
-│   lý NV  │  [Tích hợp hệ thống]                        │
-│ 🎨 Giao  │  - Shopee, Lazada, GHN, GHTK, Kế toán       │
-│   diện   │  - Connect/Disconnect buttons                │
-│          │                                              │
-│          │  [Sao lưu & Khôi phục]                      │
-│          │  - Sao lưu ngay, Tải xuống                  │
-│          │  - Khôi phục từ file                        │
-│          │                                              │
-│          │  [Giao diện & Ngôn ngữ]                     │
-│          │  - Ngôn ngữ (VI/EN)                         │
-│          │  - Màu chủ đạo (4 màu)                     │
-│          │  - Dark Mode toggle                         │
-└──────────┴──────────────────────────────────────────────┘
+**Cấu trúc HTML:**
+```html
+<div class="flex flex-col overflow-y-auto bg-gray-50 dark:bg-gray-900 pb-6">
+  <!-- HEADER -->
+  <div class="bg-white dark:bg-gray-800 shadow-sm border-b px-6 py-4">
+    <h1>Cài đặt Hệ thống</h1>
+    <p>Quản lý cấu hình và tích hợp hệ thống</p>
+  </div>
+
+  <!-- CONTENT: 2 columns (Menu + Content) -->
+  <div class="p-6">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <!-- LEFT: Settings Menu (1/4) -->
+      <div class="lg:col-span-1">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-4">
+          <nav class="space-y-1">
+            <button class="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-primary text-white">
+              <Building2 /> Thông tin công ty
+            </button>
+            <button class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100">
+              <Warehouse /> Quản lý kho
+            </button>
+            <!-- 5 more menu items -->
+          </nav>
+        </div>
+      </div>
+
+      <!-- RIGHT: Content Area (3/4) -->
+      <div class="lg:col-span-3">
+        <!-- Dynamic content based on activeSection -->
+        <!-- 7 sections: company, warehouses, general, integrations, backup, users, interface -->
+      </div>
+    </div>
+  </div>
+</div>
 ```
 
 **7 Menu Items:**
-
-1. **Thông tin công ty**
-   - Upload logo
-   - Tên công ty, MST, Địa chỉ, SĐT, Email, Website
-   - Button "Lưu thay đổi"
-
-2. **Quản lý kho**
-   - Danh sách kho cards
-   - Progress bar sức chứa
-   - Thêm/Sửa/Xóa kho
-
-3. **Cấu hình chung**
-   - Toggle: Tự động tạo mã SP
-   - Toggle: Cảnh báo tồn kho
-   - Toggle: Lot tracking
-
-4. **Tích hợp hệ thống**
-   - Shopee (Connect/Disconnect)
-   - Lazada (Connect/Disconnect)
-   - GHN (Connect/Disconnect)
-   - GHTK (Connect/Disconnect)
-   - Kế toán (Connect/Disconnect)
-   - Hiển thị trạng thái và lastSync
-
-5. **Sao lưu & Khôi phục**
-   - Sao lưu ngay
-   - Tải xuống backup
-   - Khôi phục từ file
-   - Lưu ý: Auto backup hàng ngày 00:00
-
-6. **Quản lý người dùng** (Link)
-   - Chuyển đến `/employees`
-   - Icon ExternalLink
-
-7. **Giao diện & Ngôn ngữ**
-   - Select ngôn ngữ
-   - Color picker (4 màu)
-   - Dark Mode toggle
+1. **Thông tin công ty** (`company`): Logo upload, form company details
+2. **Quản lý kho** (`warehouses`): Danh sách kho + progress bar
+3. **Cấu hình chung** (`general`): 3 toggle switches
+4. **Tích hợp hệ thống** (`integrations`): 5 integrations với Connect/Disconnect
+5. **Sao lưu & Khôi phục** (`backup`): Backup button + Restore upload
+6. **Quản lý người dùng** (`users`): Link to `/employees` với ExternalLink icon
+7. **Giao diện & Ngôn ngữ** (`interface`): Language select, Color picker, Dark mode
 
 ---
 
-### 12. 🔔 Thông báo (Notifications)
+### 12. 🔔 Thông Báo (Notifications)
 
 **Route:** `/notifications`
+**Auth:** Required
 
-**Mô tả:** Trang hiển thị danh sách thông báo hệ thống.
+**File:** `src/pages/Notifications.jsx`
 
-**Layout:**
+**Cấu trúc HTML:**
+```html
+<div class="flex flex-col overflow-y-auto bg-gray-50 dark:bg-gray-900 pb-6">
+  <!-- HEADER: Title + Unread count + "Đánh dấu tất cả" -->
+  <div class="bg-white dark:bg-gray-800 shadow-sm border-b ...">
+    <div class="px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <Bell class="w-8 h-8 text-primary" />
+          <div>
+            <h1>Thông báo</h1>
+            <p class="text-sm text-gray-600">3 thông báo chưa đọc</p>
+          </div>
+        </div>
+        <button class="bg-primary text-white px-4 py-2 rounded-lg"><CheckCheck /> Đánh dấu tất cả đã đọc</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="p-6">
+    <!-- FILTERS -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border ...">
+      <div class="flex gap-2">
+        <button class="flex-1 px-4 py-2 rounded-lg bg-primary text-white font-medium">Tất cả (7)</button>
+        <button class="flex-1 px-4 py-2 rounded-lg bg-gray-100 text-gray-700 font-medium">Chưa đọc (3)</button>
+      </div>
+    </div>
+
+    <!-- NOTIFICATIONS LIST -->
+    <div class="space-y-3">
+      <!-- Unread notification (border-primary) -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border-2 border-primary p-4 transition-all hover:shadow-md">
+        <div class="flex items-start gap-4">
+          <div class="p-3 rounded-lg bg-red-50 text-red-600">
+            <AlertTriangle class="w-6 h-6" />
+          </div>
+          <div class="flex-1">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex-1">
+                <h3 class="text-sm font-semibold">
+                  Cảnh báo tồn kho thấp
+                  <span class="ml-2 inline-block w-2 h-2 bg-red-600 rounded-full"></span>
+                </h3>
+                <p class="text-sm text-gray-600 mb-2">iPhone 15 Pro Max sắp hết hàng (còn 5 sản phẩm)</p>
+                <p class="text-xs text-gray-500">5 phút trước</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button class="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"><Check class="w-4 h-4" /></button>
+                <button class="p-2 text-red-600 hover:bg-red-50 rounded-lg"><X class="w-4 h-4" /></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Read notification (border-gray-200, opacity-75) -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border-2 border-gray-200 p-4 opacity-75">
+        <!-- Similar structure but without red badge and with opacity -->
+      </div>
+    </div>
+  </div>
+</div>
 ```
-┌─────────────────────────────────────────────────────────┐
-│ Header: 🔔 Thông báo | 3 chưa đọc | [Đánh dấu tất cả]  │
-├─────────────────────────────────────────────────────────┤
-│ Filters: [Tất cả (7)] [Chưa đọc (3)]                   │
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│ ┌───────────────────────────────────────────────────┐   │
-│ │ 🔴 Cảnh báo tồn kho thấp                    [✓] [✕]│   │
-│ │ iPhone 15 Pro Max sắp hết hàng (còn 5 SP)        │   │
-│ │ 5 phút trước                                      │   │
-│ └───────────────────────────────────────────────────┘   │
-│                                                         │
-│ ┌───────────────────────────────────────────────────┐   │
-│ │ 🔵 Đơn hàng mới                            [✓] [✕]│   │
-│ │ DH20241114001 - Nguyễn Văn A - 32.5 triệu        │   │
-│ │ 15 phút trước                                     │   │
-│ └───────────────────────────────────────────────────┘   │
-│                                                         │
-│ ┌───────────────────────────────────────────────────┐   │
-│ │ 🟠 Sản phẩm sắp hết hạn                   [✓] [✕]│   │
-│ │ Sữa tươi LOT001 - HSD: 20/11/2024 (3 ngày)       │   │
-│ │ 1 giờ trước                                       │   │
-│ └───────────────────────────────────────────────────┘   │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
-```
 
-**Các loại thông báo:**
+**5 Notification Types:**
+| Type | Icon | Color | Ví dụ |
+|------|------|-------|-------|
+| inventory | AlertTriangle | 🔴 Đỏ | Tồn kho thấp, vượt ngưỡng |
+| order | ShoppingCart | 🔵 Xanh dương | Đơn hàng mới, đã giao |
+| expiry | Clock | 🟠 Cam | Sản phẩm sắp hết hạn |
+| system | Settings | ⚫ Xám | Bảo trì hệ thống |
+| import | Package | 🟢 Xanh lá | Nhập kho thành công |
 
-1. **Cảnh báo tồn kho** (AlertTriangle - Đỏ)
-   - Tồn kho thấp
-   - Tồn kho vượt ngưỡng
-   - Hàng sắp hết
+**States:**
+| State | UI |
+|-------|-----|
+| Unread | `border-primary`, full opacity, red badge dot, Check action visible |
+| Read | `border-gray-200`, `opacity-75`, no badge, no Check action |
+| Empty | Bell icon lớn + text "Không có thông báo nào" |
 
-2. **Đơn hàng** (ShoppingCart - Xanh dương)
-   - Đơn hàng mới
-   - Đơn hàng đã giao
-   - Đơn hàng đã hủy
-
-3. **Hết hạn** (Clock - Cam)
-   - Sản phẩm sắp hết hạn
-   - Lô sắp hết HSD
-
-4. **Hệ thống** (Settings - Xám)
-   - Bảo trì hệ thống
-   - Cập nhật phiên bản
-   - Thông báo quan trọng
-
-5. **Nhập kho** (Package - Xanh lá)
-   - Nhập kho thành công
-   - Kiểm kê hoàn tất
-
-**Mỗi notification item:**
-- Icon màu sắc theo loại
-- Tiêu đề (bold)
-- Badge đỏ nếu chưa đọc
-- Nội dung ngắn
-- Thời gian (relative time)
-- Actions: Đánh dấu đã đọc (Check) + Xóa (X)
-
-**Filters:**
-- Tất cả (hiển thị tất cả notifications)
-- Chưa đọc (chỉ hiển thị unread)
-
-**Actions:**
-- **Đánh dấu đã đọc** (Check icon): Đánh dấu 1 notification là đã đọc
-- **Đánh dấu tất cả đã đọc** (CheckCheck icon): Đánh dấu tất cả notifications
-- **Xóa** (X icon): Xóa notification khỏi danh sách
-
-**Realtime Support:**
-- WebSocket placeholder (check every 30s)
-- Tự động cập nhật khi có thông báo mới
-- Badge count trên icon Bell trong Header
+**Realtime:**
+- SetInterval 30s (placeholder for WebSocket)
+- Console log: "Checking for new notifications..."
 
 ---
 
 ### 13. 👤 Profile (Cài Đặt Tài Khoản)
 
 **Route:** `/profile`
+**Auth:** Required
 
-**Mô tả:** Quản lý thông tin cá nhân và bảo mật tài khoản.
+**File:** `src/pages/Profile.jsx`
 
-**Layout:**
-```
-┌─────────────────────────────────────────────────────────┐
-│ Header: Cài đặt Tài khoản | [🚪 Đăng xuất]             │
-├──────────┬──────────────────────────────────────────────┤
-│ Avatar   │  [Thông tin] [Mật khẩu] [Thông báo] [Thiết bị]│
-│          │                                              │
-│ [Avatar] │  Tab Content                                 │
-│ Nguyễn Văn A                                            │
-│ QL kho                                                  │
-│          │  - Form chỉnh sửa thông tin                 │
-│ 📧 Email │  - Đổi mật khẩu                             │
-│ 🛡️ Vai trò│  - Cài đặt thông báo                      │
-│ 📅 Ngày  │  - Thiết bị đăng nhập                       │
-│   tham gia│                                             │
-│ 📍 Kho   │                                              │
-└──────────┴──────────────────────────────────────────────┘
+**Cấu trúc HTML:**
+```html
+<div class="flex flex-col overflow-y-auto bg-gray-50 dark:bg-gray-900 pb-6">
+  <!-- HEADER + "Đăng xuất" button -->
+  <div class="bg-white dark:bg-gray-800 shadow-sm border-b ...">
+    <div class="px-6 py-4 flex justify-between">
+      <div>
+        <h1>Cài đặt Tài khoản</h1>
+        <p>Quản lý thông tin và bảo mật tài khoản</p>
+      </div>
+      <button class="bg-red-600 text-white px-4 py-2 rounded-lg"><LogOut /> Đăng xuất</button>
+    </div>
+  </div>
+
+  <!-- CONTENT: 2 columns -->
+  <div class="p-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- LEFT: User Info Card (1/3) -->
+      <div class="lg:col-span-1">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
+          <!-- Avatar -->
+          <div class="flex flex-col items-center mb-6">
+            <div class="relative">
+              <div class="w-32 h-32 bg-gradient-to-br from-primary to-blue-600 rounded-full flex items-center justify-center text-white text-4xl font-bold">N</div>
+              <button class="absolute bottom-0 right-0 p-2 bg-white rounded-full shadow-md border"><Camera class="w-4 h-4" /></button>
+            </div>
+            <h2>Nguyễn Văn A</h2>
+            <p>Quản lý kho</p>
+          </div>
+          <!-- User details: Email, Role, Join Date, Department -->
+          <div class="space-y-4">
+            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+              <Mail class="w-5 h-5 text-gray-400" />
+              <div><p class="text-xs text-gray-500">Email</p><p class="text-sm font-medium">nguyenvana@khoai.com</p></div>
+            </div>
+            <!-- 3 more items -->
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Tabs Content (2/3) -->
+      <div class="lg:col-span-2">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border">
+          <!-- TABS -->
+          <div class="border-b border-gray-200">
+            <nav class="flex -mb-px overflow-x-auto">
+              <button class="flex items-center gap-2 px-6 py-4 border-b-2 border-primary text-primary"><User /> Thông tin</button>
+              <button class="flex items-center gap-2 px-6 py-4 border-b-2 border-transparent text-gray-500"><Lock /> Mật khẩu</button>
+              <button class="flex items-center gap-2 px-6 py-4 border-b-2 border-transparent text-gray-500"><Bell /> Thông báo</button>
+              <button class="flex items-center gap-2 px-6 py-4 border-b-2 border-transparent text-gray-500"><Monitor /> Thiết bị</button>
+            </nav>
+          </div>
+          <!-- Tab Content -->
+          <div class="p-6">
+            <!-- 4 tabs with conditional rendering -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 ```
 
 **4 Tabs:**
+| Tab | Content | Actions |
+|-----|---------|---------|
+| Thông tin | Form: Họ tên, Email, SĐT, Ngày sinh, Giới tính, Địa chỉ | Lưu thay đổi |
+| Mật khẩu | 3 password inputs + Security warning box | Cập nhật mật khẩu |
+| Thông báo | 4 toggle switches: Email, Push, Order, Inventory | Lưu cài đặt |
+| Thiết bị | Danh sách thiết bị đăng nhập | Đăng xuất từng thiết bị |
 
-#### Tab 1: Thông tin cá nhân
-- Họ và tên
-- Email
-- Số điện thoại
-- Ngày sinh
-- Giới tính (dropdown)
-- Địa chỉ
-- Button "Lưu thay đổi"
+---
 
-#### Tab 2: Đổi mật khẩu
-- Mật khẩu hiện tại (with show/hide)
-- Mật khẩu mới (with show/hide)
-- Xác nhận mật khẩu (with show/hide)
-- Box cảnh báo bảo mật (màu vàng)
-- Button "Cập nhật mật khẩu"
+### 14. 📊 Reports (Báo Cáo & Thống Kê)
 
-#### Tab 3: Cài đặt thông báo
-- Email notifications (toggle)
-- Push notifications (toggle)
-- Cảnh báo đơn hàng (toggle)
-- Cảnh báo tồn kho (toggle)
-- Button "Lưu cài đặt"
+**Route:** `/reports`
+**Auth:** Required
 
-#### Tab 4: Thiết bị đăng nhập
-- Danh sách thiết bị (Laptop, Mobile)
-- Mỗi thiết bị: Tên, Vị trí, IP, Thời gian hoạt động
-- Badge "Hiện tại" cho thiết bị đang dùng
-- Button "Đăng xuất" cho thiết bị khác
-- Box cảnh báo bảo mật
+**File:** `src/pages/Reports.jsx`
 
-**Button Đăng xuất:**
-- Màu đỏ (bg-red-600)
-- Icon LogOut
-- Ở header
+**Cấu trúc HTML:**
+```html
+<div class="flex flex-col overflow-y-auto bg-gray-50 dark:bg-gray-900 pb-6">
+  <!-- HEADER + Export buttons -->
+  <div class="bg-white dark:bg-gray-800 shadow-sm border-b ...">
+    <div class="px-6 py-4 flex justify-between">
+      <div>
+        <h1>Báo cáo & Thống kê</h1>
+        <p>Báo cáo tồn kho tổng hợp</p>
+      </div>
+      <div class="flex gap-2">
+        <button class="bg-green-600 text-white px-4 py-2 rounded-lg"><FileSpreadsheet /> Excel</button>
+        <button class="bg-red-600 text-white px-4 py-2 rounded-lg"><FileText /> PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="p-6">
+    <!-- Filters: Report Type, Warehouse, Time Range, Apply -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border ...">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div><label><BarChart3 /> Loại báo cáo</label><select>6 options</select></div>
+        <div><label><Warehouse /> Kho</label><select>4 options</select></div>
+        <div><label><Calendar /> Thời gian</label><select>5 options</select></div>
+        <div class="flex items-end"><button class="w-full bg-primary text-white px-4 py-2 rounded-lg"><Filter /> Áp dụng</button></div>
+      </div>
+    </div>
+
+    <!-- Dynamic Report Content (based on reportType) -->
+    <div class="space-y-6">
+      <!-- 6 different report types -->
+    </div>
+  </div>
+</div>
+```
+
+**6 Report Types:**
+
+| # | Type | Chart | Data |
+|---|------|-------|------|
+| 1 | Tồn kho tổng hợp | Pie Chart | 4 danh mục: Điện tử, Thực phẩm, Mỹ phẩm, Khác |
+| 2 | Nhập - Xuất | Line Chart | 7 ngày: nhập (xanh lá), xuất (đỏ) |
+| 3 | Top bán chạy | Table | Rank 1-5 với badge màu |
+| 4 | Chậm luân chuyển | Table | Tên SP, Tồn kho, Đã bán, Ngày không bán |
+| 5 | Giá trị tồn kho | Bar Chart | 4 danh mục, format VND |
+| 6 | Sắp hết hạn | Table | Sản phẩm, Lô, HSD, Còn lại (badge đỏ/cam/vàng) |
 
 ---
 
@@ -815,42 +1494,17 @@ src/
 
 ### 4 Vai Trò Chính:
 
-#### 1. Quản trị viên (Admin)
-**Permissions:** Tất cả quyền
-- ✅ Quản lý sản phẩm
-- ✅ Quản lý tồn kho
-- ✅ Quản lý đơn hàng
-- ✅ Quản lý nhà cung cấp
-- ✅ Quản lý nhân viên
-- ✅ Xem báo cáo
-- ✅ Quản lý kho
-- ✅ Cài đặt hệ thống
-
-#### 2. Quản lý kho (Manager)
-**Permissions:**
-- ✅ Nhập kho
-- ✅ Xuất kho
-- ✅ Quản lý tồn kho
-- ✅ Xem báo cáo
-- ✅ Quản lý kho
-- ❌ Quản lý nhân viên
-- ❌ Cài đặt hệ thống
-
-#### 3. Nhân viên kho (Warehouse Staff)
-**Permissions:**
-- ✅ Nhập kho
-- ✅ Xuất kho
-- ✅ Quản lý tồn kho
-- ❌ Xem báo cáo
-- ❌ Quản lý kho
-
-#### 4. Thủ kho (Storekeeper)
-**Permissions:**
-- ✅ Nhập kho
-- ✅ Xuất kho
-- ✅ Quản lý tồn kho
-- ✅ Xem báo cáo
-- ❌ Quản lý kho
+| Permission | Admin | Manager | Staff | Storekeeper |
+|------------|-------|---------|-------|-------------|
+| Nhập kho | ✅ | ✅ | ✅ | ✅ |
+| Xuất kho | ✅ | ✅ | ✅ | ✅ |
+| Quản lý tồn kho | ✅ | ✅ | ✅ | ✅ |
+| Xem báo cáo | ✅ | ✅ | ❌ | ✅ |
+| Quản lý kho | ✅ | ✅ | ❌ | ❌ |
+| Quản lý nhân viên | ✅ | ❌ | ❌ | ❌ |
+| Quản lý NCC | ✅ | ❌ | ❌ | ❌ |
+| Quản lý SP | ✅ | ❌ | ❌ | ❌ |
+| Cài đặt hệ thống | ✅ | ❌ | ❌ | ❌ |
 
 ---
 
@@ -858,62 +1512,22 @@ src/
 
 ### 1. Luồng Nhập Kho
 ```
-1. Tạo đơn nhập kho
-   ↓
-2. Chọn nhà cung cấp
-   ↓
-3. Thêm sản phẩm + số lượng
-   ↓
-4. Xác nhận đơn
-   ↓
-5. Nhập kho (cập nhật tồn)
-   ↓
-6. Cập nhật vị trí lưu trữ
+CreateStockIn → Chọn NCC → Thêm SP → Xác nhận → Cập nhật tồn → Cập nhật vị trí
 ```
 
 ### 2. Luồng Xuất Kho
 ```
-1. Tạo đơn xuất kho
-   ↓
-2. Chọn đơn hàng (từ Orders)
-   ↓
-3. Kiểm tra tồn kho
-   ↓
-4. Xác nhận xuất
-   ↓
-5. Cập nhật tồn kho
-   ↓
-6. In phiếu xuất
+CreateStockOut → Chọn đơn hàng → Kiểm tra tồn → Xác nhận xuất → Cập nhật tồn → In phiếu
 ```
 
-### 3. Luồng Quản Lý Sản Phẩm
+### 3. Luồng Kiểm Kê
 ```
-1. Thêm sản phẩm mới
-   ↓
-2. Nhập thông tin + barcode
-   ↓
-3. Phân loại danh mục
-   ↓
-4. Cấu hình vị trí mặc định
-   ↓
-5. Theo dõi lot (nếu cần)
+InventoryCheck → Chọn chế độ → Quét/Thêm SP → Nhập tồn thực tế → So sánh → Tạo biên bản
 ```
 
 ### 4. Luồng Đơn Hàng
 ```
-1. Tạo đơn hàng mới
-   ↓
-2. Chọn khách hàng
-   ↓
-3. Thêm sản phẩm
-   ↓
-4. Chọn kho xuất
-   ↓
-5. Xác nhận đơn
-   ↓
-6. Xuất kho
-   ↓
-7. Cập nhật trạng thái
+Orders → Tạo đơn → Xác nhận → Xuất kho → Giao hàng → Hoàn thành
 ```
 
 ---
@@ -921,44 +1535,48 @@ src/
 ## 🎨 Design System
 
 ### Màu Sắc
-- **Primary:** #007BFF (Xanh dương)
-- **Success:** #28A745 (Xanh lá)
-- **Warning:** #FD7E14 (Cam)
-- **Danger:** #DC3545 (Đỏ)
-- **Dark:** #1a1a1a (Dark mode background)
+| Màu | Hex | Class | Sử dụng |
+|-----|-----|-------|---------|
+| Primary | #007BFF | `bg-primary` | Buttons, Active menu |
+| Success | #28A745 | `bg-success` | KPI positive, Confirm |
+| Warning | #FD7E14 | `bg-warning` | Low stock warning |
+| Danger | #DC3545 | `bg-danger` | Delete, Critical stock |
+| Dark | #1a1a1a | `dark:bg-gray-900` | Dark mode background |
 
 ### Typography
-- **Font:** Inter (Google Fonts)
-- **Sizes:** text-xs (12px) → text-4xl (36px)
-- **Weights:** font-normal (400) → font-bold (700)
+- Font: Inter (Google Fonts)
+- Sizes: `text-xs` (12px) → `text-4xl` (36px)
+- Weights: `font-normal` (400) → `font-bold` (700)
 
 ### Spacing
-- **Base unit:** 4px
-- **Common:** p-4 (16px), p-6 (24px), p-8 (32px)
+- Base unit: 4px
+- Common: `p-4` (16px), `p-6` (24px), `p-8` (32px)
 
 ### Border Radius
-- **Small:** rounded-lg (8px)
-- **Medium:** rounded-xl (12px)
-- **Large:** rounded-2xl (16px)
+- Small: `rounded-lg` (8px)
+- Medium: `rounded-xl` (12px)
+- Large: `rounded-2xl` (16px)
 
 ### Shadows
-- **Small:** shadow-sm
-- **Medium:** shadow-md
-- **Large:** shadow-lg, shadow-xl
+- Card: `shadow-sm`
+- Hover: `shadow-md`
+- Modal: `shadow-xl`
 
 ---
 
 ## 📱 Responsive Breakpoints
 
-- **Mobile:** < 640px (sm)
-- **Tablet:** 640px - 1024px (md/lg)
-- **Desktop:** > 1024px (lg+)
+| Breakpoint | Width | Adaptations |
+|------------|-------|-------------|
+| Mobile | < 640px (sm) | Tables → Cards, 1 column grids |
+| Tablet | 640px - 1024px (md/lg) | 2-3 column grids, sidebar drawer |
+| Desktop | > 1024px (lg+) | Full layout, 4 column grids |
 
 **Mobile Adaptations:**
-- Sidebar: Slide-in drawer
-- Tables: Convert to cards
-- Grids: 1 column
-- Forms: Full width
+- Sidebar: Slide-in drawer (fixed overlay)
+- Tables: Convert to cards with all info
+- Grids: Single column
+- Forms: Full width inputs
 
 ---
 
@@ -1000,6 +1618,10 @@ VITE_APP_NAME=KHO AI
 
 - Tất cả các màn hình đều hỗ trợ Dark Mode
 - Responsive design cho Mobile, Tablet, Desktop
+- 17 pages, 15 pages có sidebar (auth pages không có)
+- Layout dùng `flex flex-col overflow-y-auto pb-6` cho tất cả pages có sidebar
+- Auth pages dùng `min-h-screen` (không có sidebar)
+- Scrollbar tùy chỉnh với `custom-scrollbar` class
 - Form validation cần bổ sung thêm
 - API integration cần kết nối backend
 - File upload cần tích hợp cloud storage
@@ -1010,3 +1632,10 @@ VITE_APP_NAME=KHO AI
 **Phát triển bởi:** KHO AI Team  
 **Phiên bản:** 1.0.0  
 **Cập nhật:** November 2024
+
+
+📋 Tài khoản đăng nhập mẫu:
+   Admin:       admin@khoai.com / 123456
+   Manager:     manager@khoai.com / 123456
+   Staff:       staff@khoai.com / 123456
+   Storekeeper: storekeeper@khoai.com / 123456
