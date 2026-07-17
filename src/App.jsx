@@ -8,6 +8,7 @@ import CreateStockIn from './pages/CreateStockIn'
 import CreateStockOut from './pages/CreateStockOut'
 import InventoryCheck from './pages/InventoryCheck'
 import BinLocation from './pages/BinLocation'
+import Warehouses from './pages/Warehouses'
 import Reports from './pages/Reports'
 import ProductDetail from './pages/ProductDetail'
 import OrderDetail from './pages/OrderDetail'
@@ -40,6 +41,7 @@ function App() {
                   <Route path="/inventory/out/create" element={<CreateStockOut />} />
                   <Route path="/inventory/check" element={<InventoryCheck />} />
                   <Route path="/bin-location" element={<BinLocation />} />
+                  <Route path="/warehouses" element={<Warehouses />} />
                   <Route path="/orders" element={<Orders />} />
                   <Route path="/orders/:id" element={<OrderDetail />} />
                   <Route path="/suppliers" element={<Suppliers />} />

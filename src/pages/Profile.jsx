@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   User, Mail, Calendar, Shield, Bell, Monitor, 
   Camera, Save, Lock, Eye, EyeOff, LogOut,
-  Smartphone, Laptop, MapPin, AlertTriangle
+  Smartphone, Laptop, MapPin, AlertTriangle, Loader2,
+  CheckCircle, AlertCircle
 } from 'lucide-react'
 
 function Profile() {
@@ -10,26 +11,33 @@ function Profile() {
   const [showPassword, setShowPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [toast, setToast] = useState(null)
 
   // User data
-  const user = {
-    name: 'Nguyễn Văn A',
+  const [user, setUser] = useState({
+    id: 'NV001',
+    employeeCode: 'NV001',
+    fullName: 'Nguyễn Văn A',
     role: 'Quản lý kho',
     email: 'nguyenvana@khoai.com',
     phone: '0901234567',
     joinDate: '15/01/2023',
     avatar: null,
-    department: 'Kho Hà Nội'
-  }
+    address: '123 Đường ABC, Hà Nội',
+    birthday: '15/05/1990',
+    gender: 'male',
+    warehouse: { name: 'Kho Hà Nội' }
+  })
 
   // Personal info form
   const [personalInfo, setPersonalInfo] = useState({
-    fullName: user.name,
+    fullName: user.fullName,
     email: user.email,
     phone: user.phone,
-    address: '123 Đường ABC, Hà Nội',
-    birthday: '15/05/1990',
-    gender: 'male'
+    address: user.address,
+    birthday: user.birthday,
+    gender: user.gender
   })
 
   // Password change form
@@ -42,7 +50,6 @@ function Profile() {
   // Notification settings
   const [notifications, setNotifications] = useState({
     emailNotifications: true,
-    smsNotifications: false,
     pushNotifications: true,
     orderAlerts: true,
     inventoryAlerts: true,
@@ -51,7 +58,7 @@ function Profile() {
   })
 
   // Login devices
-  const devices = [
+  const [devices, setDevices] = useState([
     {
       id: 1,
       type: 'laptop',
@@ -79,7 +86,7 @@ function Profile() {
       lastActive: '3 ngày trước',
       current: false
     }
-  ]
+  ])
 
   const tabs = [
     { id: 'personal', label: 'Thông tin cá nhân', icon: User },
@@ -87,6 +94,31 @@ function Profile() {
     { id: 'notifications', label: 'Cài đặt thông báo', icon: Bell },
     { id: 'devices', label: 'Thiết bị đăng nhập', icon: Monitor },
   ]
+
+  useEffect(() => {
+    loadUserProfile()
+  }, [])
+
+  const loadUserProfile = async () => {
+    try {
+      // Load from localStorage or API
+      const savedUser = localStorage.getItem('currentUser')
+      if (savedUser) {
+        const userData = JSON.parse(savedUser)
+        setUser(userData)
+        setPersonalInfo({
+          fullName: userData.fullName || '',
+          email: userData.email || '',
+          phone: userData.phone || '',
+          address: userData.address || '',
+          birthday: userData.birthday ? new Date(userData.birthday).toISOString().split('T')[0] : '',
+          gender: userData.gender || 'male'
+        })
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error)
+    }
+  }
 
   const handlePersonalInfoChange = (field, value) => {
     setPersonalInfo({ ...personalInfo, [field]: value })
@@ -103,6 +135,149 @@ function Profile() {
   const getDeviceIcon = (type) => {
     if (type === 'mobile') return <Smartphone className="w-5 h-5" />
     return <Laptop className="w-5 h-5" />
+  }
+
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type })
+    setTimeout(() => setToast(null), 3000)
+  }
+
+  const handleSavePersonalInfo = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch(`http://localhost:3001/api/profile/${user.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(personalInfo)
+      })
+      
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Lỗi khi cập nhật')
+      }
+      
+      const updatedUser = await response.json()
+      setUser({ ...user, ...updatedUser })
+      localStorage.setItem('currentUser', JSON.stringify({ ...user, ...updatedUser }))
+      showToast('Cập nhật thông tin thành công')
+    } catch (error) {
+      showToast(error.message || 'Lỗi khi cập nhật thông tin', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault()
+    
+    // Validate
+    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+      showToast('Vui lòng điền đầy đủ thông tin', 'error')
+      return
+    }
+
+    if (passwordForm.newPassword.length < 8) {
+      showToast('Mật khẩu mới phải có ít nhất 8 ký tự', 'error')
+      return
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      showToast('Mật khẩu xác nhận không khớp', 'error')
+      return
+    }
+
+    // Check password strength
+    const hasUpperCase = /[A-Z]/.test(passwordForm.newPassword)
+    const hasLowerCase = /[a-z]/.test(passwordForm.newPassword)
+    const hasNumbers = /\d/.test(passwordForm.newPassword)
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(passwordForm.newPassword)
+
+    if (!hasUpperCase || !hasLowerCase || !hasNumbers || !hasSpecialChar) {
+      showToast('Mật khẩu phải có chữ hoa, chữ thường, số và ký tự đặc biệt', 'error')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const response = await fetch(`http://localhost:3001/api/profile/${user.id}/password`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword
+        })
+      })
+      
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Lỗi khi đổi mật khẩu')
+      }
+      
+      showToast('Đổi mật khẩu thành công')
+      setPasswordForm({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      })
+    } catch (error) {
+      showToast(error.message || 'Lỗi khi đổi mật khẩu', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSaveSettings = async () => {
+    setLoading(true)
+    try {
+      await fetch(`http://localhost:3001/api/profile/${user.userId}/settings`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(notifications)
+      })
+      showToast('Lưu cài đặt thành công')
+    } catch (error) {
+      showToast('Lỗi khi lưu cài đặt', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleLogoutDevice = async (sessionId) => {
+    if (!confirm('Bạn có chắc muốn đăng xuất thiết bị này?')) return
+
+    try {
+      await fetch(`http://localhost:3001/api/profile/${user.userId}/sessions/${sessionId}`, {
+        method: 'DELETE'
+      })
+      showToast('Đăng xuất thiết bị thành công')
+      setDevices(devices.filter(d => d.id !== sessionId))
+    } catch (error) {
+      showToast('Lỗi khi đăng xuất thiết bị', 'error')
+    }
+  }
+
+  const handleAvatarUpload = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onloadend = async () => {
+      try {
+        setLoading(true)
+        await fetch(`http://localhost:3001/api/profile/${user.userId}/avatar`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ avatar: reader.result })
+        })
+        showToast('Cập nhật avatar thành công')
+        setUser({ ...user, avatar: reader.result })
+      } catch (error) {
+        showToast('Lỗi khi cập nhật avatar', 'error')
+      } finally {
+        setLoading(false)
+      }
+    }
+    reader.readAsDataURL(file)
   }
 
   return (
@@ -131,14 +306,24 @@ function Profile() {
               {/* Avatar */}
               <div className="flex flex-col items-center mb-6">
                 <div className="relative">
-                  <div className="w-32 h-32 bg-gradient-to-br from-primary to-blue-600 rounded-full flex items-center justify-center text-white text-4xl font-bold">
-                    {user.name.charAt(0)}
+                  <div className="w-32 h-32 bg-gradient-to-br from-primary to-blue-600 rounded-full flex items-center justify-center text-white text-4xl font-bold overflow-hidden">
+                    {user.avatar ? (
+                      <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      user.fullName?.charAt(0)
+                    )}
                   </div>
-                  <button className="absolute bottom-0 right-0 p-2 bg-white dark:bg-gray-700 rounded-full shadow-md border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600">
+                  <label className="absolute bottom-0 right-0 p-2 bg-white dark:bg-gray-700 rounded-full shadow-md border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer">
                     <Camera className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-                  </button>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                      className="hidden"
+                    />
+                  </label>
                 </div>
-                <h2 className="mt-4 text-xl font-bold text-gray-900 dark:text-white">{user.name}</h2>
+                <h2 className="mt-4 text-xl font-bold text-gray-900 dark:text-white">{user.fullName}</h2>
                 <p className="text-sm text-gray-600 dark:text-gray-400">{user.role}</p>
               </div>
 
@@ -164,7 +349,9 @@ function Profile() {
                   <Calendar className="w-5 h-5 text-gray-400" />
                   <div className="flex-1">
                     <p className="text-xs text-gray-500 dark:text-gray-400">Ngày tham gia</p>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">{user.joinDate}</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      {user.joinDate ? new Date(user.joinDate).toLocaleDateString('vi-VN') : 'N/A'}
+                    </p>
                   </div>
                 </div>
 
@@ -172,7 +359,7 @@ function Profile() {
                   <MapPin className="w-5 h-5 text-gray-400" />
                   <div className="flex-1">
                     <p className="text-xs text-gray-500 dark:text-gray-400">Kho phụ trách</p>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">{user.department}</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">{user.warehouse?.name || 'Chưa phân công'}</p>
                   </div>
                 </div>
               </div>
@@ -218,7 +405,7 @@ function Profile() {
                           type="text"
                           value={personalInfo.fullName}
                           onChange={(e) => handlePersonalInfoChange('fullName', e.target.value)}
-                          className="input-field"
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                         />
                       </div>
 
@@ -230,7 +417,7 @@ function Profile() {
                           type="email"
                           value={personalInfo.email}
                           onChange={(e) => handlePersonalInfoChange('email', e.target.value)}
-                          className="input-field"
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                         />
                       </div>
 
@@ -242,7 +429,7 @@ function Profile() {
                           type="tel"
                           value={personalInfo.phone}
                           onChange={(e) => handlePersonalInfoChange('phone', e.target.value)}
-                          className="input-field"
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                         />
                       </div>
 
@@ -251,10 +438,10 @@ function Profile() {
                           Ngày sinh
                         </label>
                         <input
-                          type="text"
+                          type="date"
                           value={personalInfo.birthday}
                           onChange={(e) => handlePersonalInfoChange('birthday', e.target.value)}
-                          className="input-field"
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                         />
                       </div>
 
@@ -265,7 +452,7 @@ function Profile() {
                         <select
                           value={personalInfo.gender}
                           onChange={(e) => handlePersonalInfoChange('gender', e.target.value)}
-                          className="input-field"
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                         >
                           <option value="male">Nam</option>
                           <option value="female">Nữ</option>
@@ -281,14 +468,18 @@ function Profile() {
                           type="text"
                           value={personalInfo.address}
                           onChange={(e) => handlePersonalInfoChange('address', e.target.value)}
-                          className="input-field"
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                         />
                       </div>
                     </div>
 
                     <div className="flex justify-end">
-                      <button className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors">
-                        <Save className="w-4 h-4" />
+                      <button
+                        onClick={handleSavePersonalInfo}
+                        disabled={loading}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors disabled:bg-gray-400"
+                      >
+                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                         <span className="font-medium">Lưu thay đổi</span>
                       </button>
                     </div>
@@ -300,7 +491,7 @@ function Profile() {
                   <div className="space-y-6">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Đổi mật khẩu</h3>
                     
-                    <div className="space-y-4 max-w-md">
+                    <form onSubmit={handleChangePassword} className="space-y-4 max-w-md">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                           Mật khẩu hiện tại
@@ -311,8 +502,9 @@ function Profile() {
                             type={showPassword ? 'text' : 'password'}
                             value={passwordForm.currentPassword}
                             onChange={(e) => handlePasswordChange('currentPassword', e.target.value)}
-                            className="input-field pl-10 pr-12"
+                            className="w-full pl-10 pr-12 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                             placeholder="Nhập mật khẩu hiện tại"
+                            required
                           />
                           <button
                             type="button"
@@ -334,8 +526,9 @@ function Profile() {
                             type={showNewPassword ? 'text' : 'password'}
                             value={passwordForm.newPassword}
                             onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
-                            className="input-field pl-10 pr-12"
+                            className="w-full pl-10 pr-12 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                             placeholder="Nhập mật khẩu mới"
+                            required
                           />
                           <button
                             type="button"
@@ -357,8 +550,9 @@ function Profile() {
                             type={showConfirmPassword ? 'text' : 'password'}
                             value={passwordForm.confirmPassword}
                             onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
-                            className="input-field pl-10 pr-12"
+                            className="w-full pl-10 pr-12 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                             placeholder="Nhập lại mật khẩu mới"
+                            required
                           />
                           <button
                             type="button"
@@ -385,12 +579,16 @@ function Profile() {
                       </div>
 
                       <div className="flex justify-end">
-                        <button className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors">
-                          <Save className="w-4 h-4" />
+                        <button
+                          type="submit"
+                          disabled={loading}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors disabled:bg-gray-400"
+                        >
+                          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                           <span className="font-medium">Cập nhật mật khẩu</span>
                         </button>
                       </div>
-                    </div>
+                    </form>
                   </div>
                 )}
 
@@ -478,8 +676,12 @@ function Profile() {
                     </div>
 
                     <div className="flex justify-end">
-                      <button className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors">
-                        <Save className="w-4 h-4" />
+                      <button
+                        onClick={handleSaveSettings}
+                        disabled={loading}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors disabled:bg-gray-400"
+                      >
+                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                         <span className="font-medium">Lưu cài đặt</span>
                       </button>
                     </div>
@@ -492,38 +694,45 @@ function Profile() {
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Thiết bị đăng nhập</h3>
                     
                     <div className="space-y-4">
-                      {devices.map((device) => (
-                        <div key={device.id} className="flex items-start gap-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-                          <div className="p-3 bg-white dark:bg-gray-600 rounded-lg">
-                            {getDeviceIcon(device.type)}
-                          </div>
-                          
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h4 className="text-sm font-medium text-gray-900 dark:text-white">{device.name}</h4>
-                              {device.current && (
-                                <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 border border-green-300 rounded-full">
-                                  Hiện tại
-                                </span>
-                              )}
+                      {devices.length > 0 ? (
+                        devices.map((device) => (
+                          <div key={device.id} className="flex items-start gap-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                            <div className="p-3 bg-white dark:bg-gray-600 rounded-lg">
+                              {getDeviceIcon(device.type)}
                             </div>
-                            <div className="space-y-1 text-xs text-gray-600 dark:text-gray-400">
-                              <div className="flex items-center gap-1">
-                                <MapPin className="w-3 h-3" />
-                                {device.location}
+                            
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h4 className="text-sm font-medium text-gray-900 dark:text-white">{device.name}</h4>
+                                {device.current && (
+                                  <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 border border-green-300 rounded-full">
+                                    Hiện tại
+                                  </span>
+                                )}
                               </div>
-                              <div>IP: {device.ip}</div>
-                              <div>Hoạt động: {device.lastActive}</div>
+                              <div className="space-y-1 text-xs text-gray-600 dark:text-gray-400">
+                                <div className="flex items-center gap-1">
+                                  <MapPin className="w-3 h-3" />
+                                  {device.location}
+                                </div>
+                                <div>IP: {device.ip}</div>
+                                <div>Hoạt động: {device.lastActive}</div>
+                              </div>
                             </div>
-                          </div>
 
-                          {!device.current && (
-                            <button className="px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors">
-                              Đăng xuất
-                            </button>
-                          )}
-                        </div>
-                      ))}
+                            {!device.current && (
+                              <button
+                                onClick={() => handleLogoutDevice(device.id)}
+                                className="px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                              >
+                                Đăng xuất
+                              </button>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-center text-gray-500 dark:text-gray-400 py-8">Không có thiết bị nào</p>
+                      )}
                     </div>
 
                     <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
@@ -538,6 +747,20 @@ function Profile() {
           </div>
         </div>
       </div>
+
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 z-50 ${
+          toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+        }`}>
+          {toast.type === 'success' ? (
+            <CheckCircle className="w-5 h-5" />
+          ) : (
+            <AlertCircle className="w-5 h-5" />
+          )}
+          <span className="font-medium">{toast.message}</span>
+        </div>
+      )}
     </div>
   )
 }

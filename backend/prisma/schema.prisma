@@ -86,6 +86,7 @@ model User {
   birthday            DateTime?
   gender              String?
   joinDate            DateTime    @default(now())
+  warehouseId         String?
 
   // Permissions
   canImport           Boolean @default(false)
@@ -98,8 +99,11 @@ model User {
   canManageProducts   Boolean @default(false)
 
   // Relations
-  createdReceipts     StockReceipt[] @relation("CreatedBy")
+  warehouse           Warehouse?      @relation(fields: [warehouseId], references: [id])
+  createdReceipts     StockReceipt[]  @relation("CreatedBy")
   notifications       Notification[]
+  settings            UserSetting?
+  sessions            Session[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -111,14 +115,16 @@ model User {
 // 2. WAREHOUSE & BIN LOCATION
 // ============================================================
 model Warehouse {
-  id          String        @id @default(cuid())
-  code        String        @unique
+  id          String    @id @default(cuid())
+  code        String    @unique
   name        String
   address     String
-  capacity    Int           @default(0)
-  status      Boolean       @default(true)
+  capacity    Int       @default(0)
+  status      Boolean   @default(true)
 
-  binLocations BinLocation[]
+  zones       Zone[]
+  inventories Inventory[]
+  users       User[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -126,27 +132,60 @@ model Warehouse {
   @@map("warehouses")
 }
 
-model BinLocation {
-  id          String     @id @default(cuid())
-  code        String     @unique // A-01-02
-  name        String
-  type        String     // ROW, SHELF, BIN
-  capacity    Int        @default(100)
-  status      BinStatus  @default(EMPTY)
+model Zone {
+  id          String   @id @default(cuid())
+  code        String   @unique // A, B, C
+  name        String   // Dãy A, Dãy B
+  description String?
 
   warehouseId String
   warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
 
-  parentId    String?
-  parent      BinLocation? @relation("BinTree", fields: [parentId], references: [id])
-  children    BinLocation[] @relation("BinTree")
+  shelves     Shelf[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("zones")
+}
+
+model Shelf {
+  id          String   @id @default(cuid())
+  code        String   @unique // A-01, A-02
+  name        String   // Kệ A-01
+  capacity    Int      @default(10) // Số lượng bin mặc định
+  description String?
+
+  zoneId      String
+  zone        Zone     @relation(fields: [zoneId], references: [id])
+
+  bins        Bin[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("shelves")
+}
+
+model Bin {
+  id          String     @id @default(cuid())
+  code        String     @unique // A-01-01, A-01-02
+  name        String?
+  capacity    Int        @default(100) // Dung tích tối đa
+  status      BinStatus  @default(EMPTY)
+
+  shelfId     String
+  shelf       Shelf      @relation(fields: [shelfId], references: [id])
+
+  productId   String?
+  soLuong     Int        @default(0) // Số lượng sản phẩm hiện tại
 
   inventories Inventory[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@map("bin_locations")
+  @@map("bins")
 }
 
 // ============================================================
@@ -192,15 +231,18 @@ model Inventory {
   lotNumber      String?
 
   productId      String
-  product        Product      @relation(fields: [productId], references: [id])
+  product        Product   @relation(fields: [productId], references: [id])
 
-  binLocationId  String
-  binLocation    BinLocation  @relation(fields: [binLocationId], references: [id])
+  binId          String
+  bin            Bin       @relation(fields: [binId], references: [id])
+
+  warehouseId    String?
+  warehouse      Warehouse? @relation(fields: [warehouseId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([productId, binLocationId, lotNumber])
+  @@unique([productId, binId, lotNumber])
   @@map("inventories")
 }
 
@@ -330,4 +372,45 @@ model Notification {
   createdAt DateTime @default(now())
 
   @@map("notifications")
+}
+
+// ============================================================
+// 9. USER SETTINGS & SESSIONS
+// ============================================================
+model UserSetting {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  emailNotifications    Boolean  @default(true)
+  pushNotifications     Boolean  @default(true)
+  orderAlerts           Boolean  @default(true)
+  inventoryAlerts       Boolean  @default(true)
+  systemUpdates         Boolean  @default(false)
+  marketingEmails       Boolean  @default(false)
+
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("user_settings")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  deviceName   String
+  deviceType   String   // 'laptop', 'mobile', 'tablet'
+  browser      String
+  ipAddress    String
+  location     String
+  userAgent    String
+  isCurrent    Boolean  @default(false)
+  lastActive   DateTime @default(now())
+  expiresAt    DateTime
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@map("sessions")
 }

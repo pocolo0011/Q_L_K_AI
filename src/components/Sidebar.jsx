@@ -12,12 +12,13 @@ function Sidebar() {
     { icon: Package, label: 'Sản phẩm', active: false, path: '/products' },
     { icon: Package, label: 'Quản lý Tồn kho', active: false, path: '/inventory' },
     { icon: MapPin, label: 'Vị trí Lưu trữ', active: false, path: '/bin-location' },
+    { icon: Warehouse, label: 'Quản lý Kho', active: false, path: '/warehouses' },
     { icon: ShoppingCart, label: 'Đơn hàng', active: false, path: '/orders' },
     { icon: Truck, label: 'Nhà cung cấp', active: false, path: '/suppliers' },
     { icon: Users, label: 'Nhân viên', active: false, path: '/employees' },
     { icon: BarChart3, label: 'Báo cáo', active: false, path: '/reports' },
     { icon: User, label: 'Profile', active: false, path: '/profile' },
-    { icon: Settings, label: 'Cài đặt', active: true, path: '/settings' },
+    { icon: Settings, label: 'Cài đặt', active: true, path: '/settings', customColor: 'indigo' },
   ]
 
   const sidebarContent = (
@@ -46,7 +47,9 @@ function Sidebar() {
                 to={item.path || '#'}
                 onClick={() => setIsMobileOpen(false)}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                  item.active
+                  item.active && item.customColor === 'indigo'
+                    ? 'bg-indigo-600 text-white'
+                    : item.active
                     ? 'bg-primary text-white'
                     : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                 }`}

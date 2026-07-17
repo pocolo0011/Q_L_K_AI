@@ -34,28 +34,22 @@ function Dashboard() {
 
   return (
     <div className="flex flex-col h-screen">
-      <Header onMenuClick={() => setIsMobileMenuOpen(true)} />
+      <Header 
+        onMenuClick={() => setIsMobileMenuOpen(true)} 
+        onRefresh={fetchDashboard}
+        loading={loading}
+      />
 
       <main className="flex-1 overflow-y-auto p-4 sm:p-6 pt-20">
         <div className="max-w-7xl mx-auto space-y-6">
-          {/* Title + Refresh */}
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-                Dashboard
-              </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                Tổng quan hoạt động kho (dữ liệu thực)
-              </p>
-            </div>
-            <button
-              onClick={fetchDashboard}
-              disabled={loading}
-              className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              Làm mới
-            </button>
+          {/* Title */}
+          <div className="mb-6">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+              Dashboard
+            </h1>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              Tổng quan hoạt động kho (dữ liệu thực)
+            </p>
           </div>
 
           {/* Error state */}

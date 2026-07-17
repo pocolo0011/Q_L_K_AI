@@ -1,15 +1,29 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   Download, FileSpreadsheet, FileText, Filter,
   Package, TrendingUp, TrendingDown, AlertTriangle,
-  Calendar, Warehouse, BarChart3
+  Calendar, Warehouse, BarChart3, Loader2
 } from 'lucide-react'
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import * as XLSX from 'xlsx'
+import jsPDF from 'jspdf'
+import html2canvas from 'html2canvas'
+import { warehouseApi } from '../services/api'
 
 function Reports() {
   const [reportType, setReportType] = useState('inventory')
   const [selectedWarehouse, setSelectedWarehouse] = useState('all')
   const [timeRange, setTimeRange] = useState('30days')
+  const [loading, setLoading] = useState(false)
+  const [warehouses, setWarehouses] = useState([])
+  
+  // Data states
+  const [inventoryData, setInventoryData] = useState([])
+  const [inOutData, setInOutData] = useState([])
+  const [topSellingData, setTopSellingData] = useState([])
+  const [slowMovingData, setSlowMovingData] = useState([])
+  const [expiryData, setExpiryData] = useState([])
+  const [valueData, setValueData] = useState([])
 
   const reportTypes = [
     { id: 'inventory', label: 'Tồn kho tổng hợp', icon: Package },
@@ -20,69 +34,203 @@ function Reports() {
     { id: 'expiry', label: 'Hết hạn', icon: AlertTriangle },
   ]
 
-  const warehouses = [
-    { id: 'all', name: 'Tất cả kho' },
-    { id: 'hanoi', name: 'Kho Hà Nội' },
-    { id: 'hcm', name: 'Kho TP.HCM' },
-    { id: 'danang', name: 'Kho Đà Nẵng' },
-  ]
-
   const timeRanges = [
-    { id: 'today', label: 'Hôm nay' },
     { id: '7days', label: '7 ngày' },
     { id: '30days', label: '30 ngày' },
     { id: 'quarter', label: 'Quý' },
     { id: 'year', label: 'Năm' },
   ]
 
-  // Sample data for different reports
-  const inventoryData = [
-    { name: 'Điện tử', value: 4500, color: '#007BFF' },
-    { name: 'Thực phẩm', value: 3200, color: '#28A745' },
-    { name: 'Mỹ phẩm', value: 2100, color: '#FD7E14' },
-    { name: 'Khác', value: 1500, color: '#6C757D' },
-  ]
+  useEffect(() => {
+    loadWarehouses()
+  }, [])
 
-  const inOutData = [
-    { date: '01/11', nhap: 120, xuat: 80 },
-    { date: '05/11', nhap: 150, xuat: 100 },
-    { date: '10/11', nhap: 180, xuat: 120 },
-    { date: '15/11', nhap: 140, xuat: 90 },
-    { date: '20/11', nhap: 160, xuat: 110 },
-    { date: '25/11', nhap: 200, xuat: 130 },
-    { date: '30/11', nhap: 170, xuat: 105 },
-  ]
+  useEffect(() => {
+    loadReportData()
+  }, [reportType, selectedWarehouse, timeRange])
 
-  const topSellingData = [
-    { rank: 1, name: 'iPhone 15 Pro Max', sold: 245, revenue: 6125000000 },
-    { rank: 2, name: 'Samsung Galaxy S24', sold: 189, revenue: 4158000000 },
-    { rank: 3, name: 'MacBook Air M2', sold: 156, revenue: 4368000000 },
-    { rank: 4, name: 'iPad Pro 12.9"', sold: 134, revenue: 4288000000 },
-    { rank: 5, name: 'AirPods Pro 2', sold: 312, revenue: 2028000000 },
-  ]
+  const loadWarehouses = async () => {
+    try {
+      const data = await warehouseApi.getWarehouses()
+      setWarehouses([
+        { id: 'all', name: 'Tất cả kho' },
+        ...data.map(wh => ({ id: wh.id, name: wh.name }))
+      ])
+    } catch (error) {
+      console.error('Error loading warehouses:', error)
+    }
+  }
 
-  const slowMovingData = [
-    { name: 'Sản phẩm A', stock: 50, sold: 2, days: 90 },
-    { name: 'Sản phẩm B', stock: 35, sold: 1, days: 75 },
-    { name: 'Sản phẩm C', stock: 28, sold: 3, days: 60 },
-  ]
+  const loadReportData = async () => {
+    setLoading(true)
+    try {
+      switch (reportType) {
+        case 'inventory':
+          await loadInventoryReport()
+          break
+        case 'inout':
+          await loadInOutReport()
+          break
+        case 'topselling':
+          await loadTopSellingReport()
+          break
+        case 'slowmoving':
+          await loadSlowMovingReport()
+          break
+        case 'expiry':
+          await loadExpiryReport()
+          break
+        case 'value':
+          await loadValueReport()
+          break
+      }
+    } catch (error) {
+      console.error('Error loading report data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
-  const expiryData = [
-    { product: 'Sữa tươi', lot: 'LOT001', expiry: '20/11/2024', daysLeft: 3, quantity: 50 },
-    { product: 'Bánh snack', lot: 'LOT002', expiry: '25/11/2024', daysLeft: 8, quantity: 100 },
-    { product: 'Nước ngọt', lot: 'LOT003', expiry: '30/11/2024', daysLeft: 13, quantity: 200 },
-  ]
+  const loadInventoryReport = async () => {
+    const params = {
+      warehouseId: selectedWarehouse,
+      timeRange: timeRange
+    }
+    const response = await fetch(`http://localhost:3001/api/reports/inventory?${new URLSearchParams(params)}`)
+    const data = await response.json()
+    setInventoryData(data.categories || [])
+  }
+
+  const loadInOutReport = async () => {
+    const params = {
+      warehouseId: selectedWarehouse,
+      timeRange: timeRange
+    }
+    const response = await fetch(`http://localhost:3001/api/reports/inout?${new URLSearchParams(params)}`)
+    const data = await response.json()
+    setInOutData(data.data || [])
+  }
+
+  const loadTopSellingReport = async () => {
+    const params = {
+      warehouseId: selectedWarehouse,
+      timeRange: timeRange
+    }
+    const response = await fetch(`http://localhost:3001/api/reports/topselling?${new URLSearchParams(params)}`)
+    const data = await response.json()
+    setTopSellingData(data.products || [])
+  }
+
+  const loadSlowMovingReport = async () => {
+    const params = {
+      warehouseId: selectedWarehouse
+    }
+    const response = await fetch(`http://localhost:3001/api/reports/slowmoving?${new URLSearchParams(params)}`)
+    const data = await response.json()
+    setSlowMovingData(data.products || [])
+  }
+
+  const loadExpiryReport = async () => {
+    const params = {
+      warehouseId: selectedWarehouse
+    }
+    const response = await fetch(`http://localhost:3001/api/reports/expiry?${new URLSearchParams(params)}`)
+    const data = await response.json()
+    setExpiryData(data.products || [])
+  }
+
+  const loadValueReport = async () => {
+    const response = await fetch(`http://localhost:3001/api/reports/value?timeRange=${timeRange}`)
+    const data = await response.json()
+    setValueData(data.warehouses || [])
+  }
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
   }
 
   const handleExportExcel = () => {
-    alert('Đang xuất Excel...')
+    try {
+      let dataToExport = []
+      let fileName = ''
+
+      switch (reportType) {
+        case 'inventory':
+          dataToExport = inventoryData.map(item => ({
+            'Danh mục': item.name,
+            'Số lượng': item.value,
+            'Tỷ lệ (%)': item.percentage,
+            'Giá trị (VND)': item.valueVND
+          }))
+          fileName = 'bao-cao-ton-kho'
+          break
+        case 'topselling':
+          dataToExport = topSellingData.map(item => ({
+            'Rank': item.rank,
+            'Sản phẩm': item.name,
+            'Đã bán': item.sold,
+            'Doanh thu': item.revenue
+          }))
+          fileName = 'top-san-pham-ban-chay'
+          break
+        case 'slowmoving':
+          dataToExport = slowMovingData.map(item => ({
+            'Sản phẩm': item.name,
+            'Tồn kho': item.stock,
+            'Đã bán': item.sold,
+            'Ngày không bán': item.days
+          }))
+          fileName = 'san-pham-cham-luan-chuyen'
+          break
+        case 'expiry':
+          dataToExport = expiryData.map(item => ({
+            'Sản phẩm': item.product,
+            'Lô': item.lot,
+            'HSD': item.expiry,
+            'Còn lại (ngày)': item.daysLeft,
+            'Số lượng': item.quantity
+          }))
+          fileName = 'san-pham-sap-het-han'
+          break
+        default:
+          alert('Chức năng xuất Excel đang được phát triển cho loại báo cáo này')
+          return
+      }
+
+      const ws = XLSX.utils.json_to_sheet(dataToExport)
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, ws, 'Báo cáo')
+      XLSX.writeFile(wb, `${fileName}_${new Date().toISOString().split('T')[0]}.xlsx`)
+    } catch (error) {
+      console.error('Error exporting Excel:', error)
+      alert('Lỗi khi xuất Excel')
+    }
   }
 
-  const handleExportPDF = () => {
-    alert('Đang xuất PDF...')
+  const handleExportPDF = async () => {
+    try {
+      const element = document.getElementById('report-content')
+      if (!element) {
+        alert('Không tìm thấy nội dung báo cáo')
+        return
+      }
+
+      const canvas = await html2canvas(element, {
+        backgroundColor: '#0f172a',
+        scale: 2
+      })
+
+      const imgData = canvas.toDataURL('image/png')
+      const pdf = new jsPDF('p', 'mm', 'a4')
+      const imgWidth = 210
+      const imgHeight = (canvas.height * imgWidth) / canvas.width
+
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight)
+      pdf.save(`bao-cao_${new Date().toISOString().split('T')[0]}.pdf`)
+    } catch (error) {
+      console.error('Error exporting PDF:', error)
+      alert('Lỗi khi xuất PDF')
+    }
   }
 
   const getReportTitle = () => {
@@ -95,6 +243,19 @@ function Reports() {
       case 'expiry': return 'Báo cáo sản phẩm sắp hết hạn'
       default: return 'Báo cáo'
     }
+  }
+
+  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899']
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 border-b-2 border-primary animate-spin mx-auto mb-4" />
+          <p className="text-gray-600 dark:text-gray-400">Đang tải dữ liệu...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -184,7 +345,10 @@ function Reports() {
 
             {/* Apply Button */}
             <div className="flex items-end">
-              <button className="w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors font-medium">
+              <button 
+                onClick={loadReportData}
+                className="w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+              >
                 <Filter className="w-4 h-4 inline mr-1" />
                 Áp dụng
               </button>
@@ -193,63 +357,81 @@ function Reports() {
         </div>
 
         {/* Report Content */}
-        <div className="space-y-6">
+        <div id="report-content" className="space-y-6">
           {/* Inventory Report */}
           {reportType === 'inventory' && (
             <>
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Tồn kho theo danh mục</h3>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={inventoryData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {inventoryData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+                {inventoryData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={inventoryData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {inventoryData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: '#1f2937', 
+                          border: '1px solid #374151',
+                          color: '#fff'
+                        }} 
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <p className="text-center text-gray-500 dark:text-gray-400 py-8">Không có dữ liệu</p>
+                )}
               </div>
 
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Chi tiết tồn kho</h3>
+              <div className="bg-slate-900 dark:bg-slate-900 rounded-lg shadow-sm border border-gray-700 p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">Chi tiết tồn kho</h3>
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                    <thead className="bg-slate-800 border-b border-gray-700">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Danh mục</th>
-                        <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Số lượng</th>
-                        <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Tỷ lệ</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Danh mục</th>
+                        <th className="px-4 py-3 text-center text-xs font-semibold text-gray-300 uppercase">Số lượng</th>
+                        <th className="px-4 py-3 text-right text-xs font-semibold text-gray-300 uppercase">Tỷ lệ</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                      {inventoryData.map((item, index) => (
-                        <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
-                              <span className="text-sm font-medium text-gray-900 dark:text-white">{item.name}</span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            <span className="text-sm text-gray-900 dark:text-white">{item.value.toLocaleString()}</span>
-                          </td>
-                          <td className="px-4 py-3 text-right">
-                            <span className="text-sm text-gray-900 dark:text-white">
-                              {((item.value / inventoryData.reduce((sum, i) => sum + i.value, 0)) * 100).toFixed(1)}%
-                            </span>
+                    <tbody className="divide-y divide-gray-700">
+                      {inventoryData.length > 0 ? (
+                        inventoryData.map((item, index) => (
+                          <tr key={index} className="hover:bg-slate-800">
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
+                                <span className="text-sm font-medium text-white">{item.name}</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <span className="text-sm text-white">{item.value.toLocaleString()}</span>
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <span className="text-sm text-white">
+                                {item.percentage}%
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="3" className="px-4 py-8 text-center text-gray-400">
+                            Không có dữ liệu
                           </td>
                         </tr>
-                      ))}
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -261,17 +443,27 @@ function Reports() {
           {reportType === 'inout' && (
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Biến động nhập - xuất</h3>
-              <ResponsiveContainer width="100%" height={400}>
-                <LineChart data={inOutData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="nhap" stroke="#28A745" name="Nhập kho" strokeWidth={2} />
-                  <Line type="monotone" dataKey="xuat" stroke="#DC3545" name="Xuất kho" strokeWidth={2} />
-                </LineChart>
-              </ResponsiveContainer>
+              {inOutData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={400}>
+                  <LineChart data={inOutData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <XAxis dataKey="date" stroke="#9CA3AF" />
+                    <YAxis stroke="#9CA3AF" />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: '#1f2937', 
+                        border: '1px solid #374151',
+                        color: '#fff'
+                      }} 
+                    />
+                    <Legend />
+                    <Line type="monotone" dataKey="nhap" stroke="#10B981" name="Nhập kho" strokeWidth={2} />
+                    <Line type="monotone" dataKey="xuat" stroke="#EF4444" name="Xuất kho" strokeWidth={2} />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-center text-gray-500 dark:text-gray-400 py-8">Không có dữ liệu</p>
+              )}
             </div>
           )}
 
@@ -290,29 +482,37 @@ function Reports() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                    {topSellingData.map((item, index) => (
-                      <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                        <td className="px-4 py-3 text-center">
-                          <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${
-                            item.rank === 1 ? 'bg-yellow-100 text-yellow-700' :
-                            item.rank === 2 ? 'bg-gray-100 text-gray-700' :
-                            item.rank === 3 ? 'bg-orange-100 text-orange-700' :
-                            'bg-blue-50 text-blue-700'
-                          }`}>
-                            {item.rank}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className="text-sm font-medium text-gray-900 dark:text-white">{item.name}</span>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <span className="text-sm text-gray-900 dark:text-white">{item.sold}</span>
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <span className="text-sm font-semibold text-gray-900 dark:text-white">{formatCurrency(item.revenue)}</span>
+                    {topSellingData.length > 0 ? (
+                      topSellingData.map((item, index) => (
+                        <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                          <td className="px-4 py-3 text-center">
+                            <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${
+                              item.rank === 1 ? 'bg-yellow-100 text-yellow-700' :
+                              item.rank === 2 ? 'bg-gray-100 text-gray-700' :
+                              item.rank === 3 ? 'bg-orange-100 text-orange-700' :
+                              'bg-blue-50 text-blue-700'
+                            }`}>
+                              {item.rank}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="text-sm font-medium text-gray-900 dark:text-white">{item.name}</span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span className="text-sm text-gray-900 dark:text-white">{item.sold}</span>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <span className="text-sm font-semibold text-gray-900 dark:text-white">{formatCurrency(item.revenue)}</span>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="4" className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                          Không có dữ liệu
                         </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -334,24 +534,32 @@ function Reports() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                    {slowMovingData.map((item, index) => (
-                      <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                        <td className="px-4 py-3">
-                          <span className="text-sm font-medium text-gray-900 dark:text-white">{item.name}</span>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <span className="text-sm text-gray-900 dark:text-white">{item.stock}</span>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <span className="text-sm text-gray-900 dark:text-white">{item.sold}</span>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <span className="inline-flex px-2 py-1 text-sm font-semibold rounded-lg bg-red-50 text-red-600">
-                            {item.days} ngày
-                          </span>
+                    {slowMovingData.length > 0 ? (
+                      slowMovingData.map((item, index) => (
+                        <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                          <td className="px-4 py-3">
+                            <span className="text-sm font-medium text-gray-900 dark:text-white">{item.name}</span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span className="text-sm text-gray-900 dark:text-white">{item.stock}</span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span className="text-sm text-gray-900 dark:text-white">{item.sold}</span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span className="inline-flex px-2 py-1 text-sm font-semibold rounded-lg bg-red-50 text-red-600 dark:bg-red-900 dark:text-red-200">
+                              {item.days} ngày
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="4" className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                          Không có dữ liệu
                         </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -374,31 +582,39 @@ function Reports() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                    {expiryData.map((item, index) => (
-                      <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                        <td className="px-4 py-3">
-                          <span className="text-sm font-medium text-gray-900 dark:text-white">{item.product}</span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className="text-sm text-gray-600 dark:text-gray-400">{item.lot}</span>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <span className="text-sm text-gray-900 dark:text-white">{item.expiry}</span>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <span className={`inline-flex px-2 py-1 text-sm font-semibold rounded-lg ${
-                            item.daysLeft <= 3 ? 'bg-red-50 text-red-600' :
-                            item.daysLeft <= 7 ? 'bg-orange-50 text-orange-600' :
-                            'bg-yellow-50 text-yellow-600'
-                          }`}>
-                            {item.daysLeft} ngày
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <span className="text-sm text-gray-900 dark:text-white">{item.quantity}</span>
+                    {expiryData.length > 0 ? (
+                      expiryData.map((item, index) => (
+                        <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                          <td className="px-4 py-3">
+                            <span className="text-sm font-medium text-gray-900 dark:text-white">{item.product}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="text-sm text-gray-600 dark:text-gray-400">{item.lot}</span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span className="text-sm text-gray-900 dark:text-white">{item.expiry}</span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span className={`inline-flex px-2 py-1 text-sm font-semibold rounded-lg ${
+                              item.daysLeft <= 3 ? 'bg-red-50 text-red-600 dark:bg-red-900 dark:text-red-200' :
+                              item.daysLeft <= 7 ? 'bg-orange-50 text-orange-600 dark:bg-orange-900 dark:text-orange-200' :
+                              'bg-yellow-50 text-yellow-600 dark:bg-yellow-900 dark:text-yellow-200'
+                            }`}>
+                              {item.daysLeft} ngày
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span className="text-sm text-gray-900 dark:text-white">{item.quantity}</span>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="5" className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                          Không có dữ liệu
                         </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -409,16 +625,27 @@ function Reports() {
           {reportType === 'value' && (
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Giá trị tồn kho theo kho</h3>
-              <ResponsiveContainer width="100%" height={400}>
-                <BarChart data={inventoryData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip formatter={(value) => formatCurrency(value * 1000000)} />
-                  <Legend />
-                  <Bar dataKey="value" fill="#007BFF" name="Giá trị (triệu VND)" />
-                </BarChart>
-              </ResponsiveContainer>
+              {valueData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={400}>
+                  <BarChart data={valueData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <XAxis dataKey="name" stroke="#9CA3AF" />
+                    <YAxis stroke="#9CA3AF" />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: '#1f2937', 
+                        border: '1px solid #374151',
+                        color: '#fff'
+                      }}
+                      formatter={(value) => [`${value} triệu VND`, 'Giá trị']}
+                    />
+                    <Legend />
+                    <Bar dataKey="value" fill="#3B82F6" name="Giá trị (triệu VND)" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-center text-gray-500 dark:text-gray-400 py-8">Không có dữ liệu</p>
+              )}
             </div>
           )}
         </div>
